@@ -36,37 +36,54 @@ const Users = () => {
     getUsers();
   }, [loading]);
 
-  const handleDelete = async (id) => {
-    try {
-      await instance.delete("/admin/guards/" + id);
-      toast.success("Foydalanuvchi muvaffaqiyatli o‘chirildi");
-      setLoading(true);
-    } catch (error) {
-      toast.error("Foydalanuvchini o‘chirishda xatolik yuz berdi");
-    }
-  };
-
   const handleCreate = async (values) => {
     try {
-      await instance.post("/admin/guards", values);
+      await instance.post("/user", values);
       toast.success("Foydalanuvchi muvaffaqiyatli yaratildi");
       setIsFormModalOpen(false);
       form.resetFields();
       setLoading(true);
     } catch (error) {
-      toast.error("Foydalanuvchini yaratishda xatolik yuz berdi");
+      // console.log(error?.response?.data?.message);
+      let errText = "";
+      if (error?.response?.data?.message.includes("duplicate"))
+        errText = "Boshqa login kiriting";
+      toast.error(errText || "Foydalanuvchini yaratishda xatolik yuz berdi");
     }
   };
 
   const handleEdit = async (values) => {
     try {
-      await instance.patch("/admin/guards/" + selected.id, values);
+      await instance.patch("/user/" + selected.id, values);
       toast.success("Foydalanuvchi ma’lumotlari yangilandi");
       setIsFormModalOpen(false);
       form.resetFields();
       setLoading(true);
     } catch (error) {
-      toast.error("Ma’lumotlarni yangilashda xatolik yuz berdi");
+      let errText = "";
+      if (error?.response?.data?.message.includes("duplicate"))
+        errText = "Boshqa login kiriting";
+      toast.error(errText || "Ma’lumotlarni yangilashda xatolik yuz berdi");
+    }
+  };
+
+  const handleInactive = async (id) => {
+    try {
+      await instance.delete("/user/" + id);
+      toast.success("Foydalanuvchi muvaffaqiyatli nofaollashtirildi");
+      setLoading(true);
+    } catch (error) {
+      toast.error("Foydalanuvchini nofaollashtirishda xatolik yuz berdi");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await instance.delete("/user/delete/" + id);
+      toast.success("Foydalanuvchi muvaffaqiyatli o'chirildi");
+      setLoading(true);
+    } catch (error) {
+      toast.error("Foydalanuvchini o'chirildi xatolik yuz berdi");
     }
   };
 
@@ -94,13 +111,16 @@ const Users = () => {
       title: "Amallar",
       render: (_, record) => (
         <Space>
-          {record?.status === "ACTIVE" && (
-            <Button danger onClick={() => handleDelete(record.id)}>
-              O‘chirish
-            </Button>
-          )}
           <Button
-            type="default"
+            style={{ color: "#ff4d4f" }} // danger
+            onClick={() => handleDelete(record.id)}
+          >
+            O‘chirish
+          </Button>
+
+          <Button
+            // type="text"
+            style={{ color: "#1677ff" }} // primary
             onClick={() => {
               setSelected(record);
               setFormMode("edit");
@@ -112,6 +132,7 @@ const Users = () => {
           </Button>
 
           <Button
+            style={{ color: "#13c2c2" }} // info
             onClick={() => {
               setSelected(record);
               setIsModalOpen(true);
@@ -119,6 +140,15 @@ const Users = () => {
           >
             Batafsil
           </Button>
+
+          {record?.status === "ACTIVE" && (
+            <Button
+              style={{ color: "#faad14" }} // warning
+              onClick={() => handleInactive(record.id)}
+            >
+              Nofaollashtirish
+            </Button>
+          )}
         </Space>
       ),
     },

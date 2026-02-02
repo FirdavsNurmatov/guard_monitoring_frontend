@@ -17,6 +17,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { CheckpointMarker } from "../components/CheckpointMarker";
 
 // default icon to fix missing marker
 delete L.Icon.Default.prototype._getIconUrl;
@@ -44,35 +45,29 @@ export default function Dashboard() {
   const [now, setNow] = useState(new Date());
   const [gpsPoints, setGpsPoints] = useState([]);
   const [mapType, setMapType] = useState("y"); // 🗺️ default: hybrid
+  const [objectType, setObjectType] = useState("MAP");
 
   const baseUrl = import.meta.env.VITE_SERVER_PORT;
   const navigate = useNavigate();
   const { user } = useAuthStore((store) => store);
 
-  // 🟢 Barcha obyektlarni olish
   const fetchAllMaps = async () => {
     try {
-      const res = await instance.get("/admin/objects");
+      const res = await instance.get("/object");
       setMaps(res.data || []);
     } catch (err) {
       toast.error("Obyektlar ro‘yxatini yuklab bo‘lmadi 😞");
     }
   };
 
-  // 🟢 Tanlangan obyektni yuklash
   const handleSelectMap = async (id) => {
     setLoading(true);
     try {
-      const res = await instance.get(`/admin/object/${id}`);
-      const { data } = await instance.get(`/admin/checkpoints`);
-
-      const m = {
+      const res = await instance.get(`/object/${id}`);
+      setSelectedMap({
         ...res.data,
-        checkpoints: data?.res || [],
         imageUrl: `${baseUrl}${res.data.imageUrl}`,
-      };
-
-      setSelectedMap(m);
+      });
       await fetchInitialLogs(id);
     } catch (err) {
       toast.error("Obyekt ma'lumotlarini yuklab bo‘lmadi 😕");
@@ -81,19 +76,19 @@ export default function Dashboard() {
     }
   };
 
-  // MonitoringLogs
+  // JournalLogs
   useEffect(() => {
     if (!journal) return; // modal yopiq bo‘lsa fetch bo‘lmaydi
 
     const fetchLogs = async () => {
       const res = await instance.get(
-        `/admin/monitoringLogs?page=${page}&limit=30`
+        `/admin/monitoringLogs?objectId=${selectedMap.id}&page=${page}&limit=30`,
       );
       const data = res?.data?.items || [];
 
       const formattedJournalLogs = data.map((log) => ({
         id: log.id,
-        guard: log.user?.username || "Noma'lum",
+        guard: log.user?.username || log.user?.login,
         checkpoint: log.checkpoint?.name || "-",
         createdAtRaw: new Date(log.createdAt),
         status: log.status,
@@ -109,12 +104,14 @@ export default function Dashboard() {
   // 🟢 Loglarni olish
   const fetchInitialLogs = async (objectId) => {
     try {
-      const res = await instance.get(`/admin/logs?limit=50`);
+      const res = await instance.get(
+        `/admin/logs?limit=50&objectId=${objectId}`,
+      );
       const data = res?.data?.data || [];
 
       const formattedLogs = data.map((log) => ({
         id: log.id,
-        guard: log.user?.username || "Noma'lum",
+        guard: log.user?.username || log.user?.login,
         checkpoint: log.checkpoint?.name || "-",
         status: log.status,
         createdAt: new Date(log.createdAt).toLocaleTimeString(),
@@ -145,32 +142,34 @@ export default function Dashboard() {
     }
   };
 
-  // 🧠 INIT EFFECT
   useEffect(() => {
     const init = async () => {
       await fetchAllMaps();
     };
-
     init();
-  }, []); // 🟢 faqat bir marta ishlaydi (mount paytida)
+  }, []);
 
   useEffect(() => {
     if (maps.length > 0 && !selectedMap) {
       handleSelectMap(maps[0].id);
+    } else if (maps.length > 0 && selectedMap) {
+      handleSelectMap(selectedMap?.id);
     }
   }, [maps]); // 🟢 faqat maps yangilansa, lekin fetch ichida emas
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
-  }, []); // 🕒 vaqt yangilanishi mustaqil effect
+  }, []);
 
   useEffect(() => {
-    // 🧠 Socketdan real-time loglarni olish (faqat bir marta)
     const handleLog = (log) => {
+      // console.log(log?.checkpoint?.objectId, selectedMap?.id);
+      if (log?.checkpoint?.objectId !== selectedMap?.id) return;
+
       const formattedLog = {
         id: log.id,
-        guard: log.user?.username || "Noma'lum",
+        guard: log.user?.username || log.user?.login,
         checkpoint: log.checkpoint?.name || "-",
         status: log.status,
         createdAt: new Date(log.createdAt).toLocaleTimeString(),
@@ -183,7 +182,9 @@ export default function Dashboard() {
 
       // 🔊 audio va noty xabarnoma
       const audio = new Audio("/sound-example.wav");
-      audio.play().catch(() => {});
+      audio.play().catch((err) => {
+        console.log(err);
+      });
 
       new Noty({
         text: `<b>${formattedLog.guard}</b> - ${formattedLog.checkpoint}`,
@@ -191,8 +192,8 @@ export default function Dashboard() {
           formattedLog.status === "ON_TIME"
             ? "success"
             : formattedLog.status === "LATE"
-            ? "warning"
-            : "error",
+              ? "warning"
+              : "error",
         layout: "topRight",
         timeout: 4000,
       }).show();
@@ -242,7 +243,7 @@ export default function Dashboard() {
       const userId = msg.split(":")[1];
       try {
         const res = await instance.get(`/admin/gps/${userId}?limit=20`);
-        const points = res.data.map((p) => [p.location.lat, p.location.lng]);
+        const points = res.data.map((p) => [p.location?.lat, p.location?.lng]);
         setGpsPoints(points);
       } catch (err) {
         toast.error("GPS ma’lumotlarini yuklab bo‘lmadi 📡");
@@ -292,8 +293,8 @@ export default function Dashboard() {
         status === "ON_TIME"
           ? "Vaqtida kelgan"
           : status === "LATE"
-          ? "Ozgina kechikib kelgan"
-          : "Kech kelgan",
+            ? "Ozgina kechikib kelgan"
+            : "Kech kelgan",
       key: "status",
     },
   ];
@@ -336,18 +337,42 @@ export default function Dashboard() {
           <div className="flex gap-2">
             <Button
               color="purple"
-              variant="solid"
-              onClick={() => handleSelectMap(maps[0]?.id)}
+              variant={objectType === "IMAGE" ? "outlined" : "solid"}
+              onClick={() => {
+                // handleSelectMap(selectedMap?.id);
+                setObjectType("IMAGE");
+              }}
             >
-              {maps[0]?.name}
+              Rasm ko'rinishida
             </Button>
             <Button
               color="cyan"
-              variant="solid"
-              onClick={() => handleSelectMap(maps[1]?.id)}
+              variant={objectType === "MAP" ? "outlined" : "solid"}
+              onClick={() => {
+                // handleSelectMap(selectedMap.id);
+                setObjectType("MAP");
+              }}
             >
-              {maps[1]?.name}
+              Xarita ko'rinishida
             </Button>
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Obyekt tanlang"
+              value={selectedMap?.id}
+              onChange={(id) => {
+                const map = maps.find((m) => m.id === id);
+                setSelectedMap(map);
+                handleSelectMap(map.id);
+              }}
+              // showSearch
+              optionFilterProp="children"
+            >
+              {maps.map((item) => (
+                <Option key={item.id} value={item.id}>
+                  {item.name}
+                </Option>
+              ))}
+            </Select>
           </div>
         </div>
         <div className="flex gap-2 items-center">
@@ -374,7 +399,7 @@ export default function Dashboard() {
         <>
           {selectedMap && (
             <div className="relative h-11/12 w-11/12 border rounded-xl overflow-hidden m-auto">
-              {selectedMap.type === "IMAGE" ? (
+              {objectType === "IMAGE" ? (
                 <>
                   <img
                     src={selectedMap.imageUrl}
@@ -400,10 +425,10 @@ export default function Dashboard() {
                     if (latestLog) {
                       const now = Date.now();
                       const diffSec = Math.floor(
-                        (now - latestLog.createdAtRaw) / 1000
+                        (now - latestLog.createdAtRaw) / 1000,
                       );
 
-                      let totalTime = (cp.pass_time + cp.normal_time) * 60;
+                      let totalTime = (cp.passTime + cp.normalTime) * 60;
 
                       const remain = Math.max(totalTime - diffSec, 0);
 
@@ -416,64 +441,35 @@ export default function Dashboard() {
                         if (hours > 0) {
                           timeDiff = `${String(hours).padStart(
                             2,
-                            "0"
+                            "0",
                           )}:${String(minutes).padStart(2, "0")}:${String(
-                            seconds
+                            seconds,
                           ).padStart(2, "0")}`;
                         } else {
                           timeDiff = `${String(minutes).padStart(
                             2,
-                            "0"
+                            "0",
                           )}:${String(seconds).padStart(2, "0")}`;
                         }
                       }
                     }
 
                     return (
-                      <div
+                      <CheckpointMarker
                         key={cp.id}
-                        className="absolute flex flex-col items-center"
+                        cp={cp}
+                        latestLog={latestLog}
+                        timeDiff={timeDiff}
                         style={{
                           top: `${cp.position?.yPercent || 0}%`,
                           left: `${cp.position?.xPercent || 0}%`,
                         }}
-                      >
-                        <div
-                          className={`bg-white rounded-lg border px-2 py-1 flex flex-col items-center gap-1 shadow`}
-                        >
-                          <div
-                            className={`w-6 h-6 rounded-full ${statusColor}`}
-                          />
-                          <div className="text-sm text-center">
-                            <div>{cp.name}</div>
-                            <span className="font-sans">
-                              {latestLog?.createdAtRaw.toLocaleString("uz-UZ", {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              })}
-                            </span>
-                            {latestLog && (
-                              <div className="font-medium">
-                                {latestLog.guard}
-                              </div>
-                            )}
-                            {timeDiff && (
-                              <div className="text-blue-600 font-semibold">
-                                {timeDiff}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      />
                     );
                   })}
                 </>
               ) : (
-                selectedMap.type === "MAP" && (
+                objectType === "MAP" && (
                   <>
                     {/* 🧭 Xarita turi tanlash */}
                     <div
@@ -508,7 +504,7 @@ export default function Dashboard() {
                       />
 
                       {selectedMap.checkpoints?.map((cp) => {
-                        if (!cp.location.lat || !cp.location.lng) return null;
+                        if (!cp.location?.lat || !cp.location?.lng) return null;
 
                         const latestLog = [...logs]
                           .filter((l) => l.zoneId === cp.id)
@@ -527,10 +523,10 @@ export default function Dashboard() {
                         if (latestLog) {
                           const now = Date.now();
                           const diffSec = Math.floor(
-                            (now - latestLog.createdAtRaw) / 1000
+                            (now - latestLog.createdAtRaw) / 1000,
                           );
 
-                          let totalTime = (cp.normal_time + cp.pass_time) * 60;
+                          let totalTime = (cp.normalTime + cp.passTime) * 60;
 
                           const remain = Math.max(totalTime - diffSec, 0);
 
@@ -543,14 +539,14 @@ export default function Dashboard() {
                             if (hours > 0) {
                               timeDiff = `${String(hours).padStart(
                                 2,
-                                "0"
+                                "0",
                               )}:${String(minutes).padStart(2, "0")}:${String(
-                                seconds
+                                seconds,
                               ).padStart(2, "0")}`;
                             } else {
                               timeDiff = `${String(minutes).padStart(
                                 2,
-                                "0"
+                                "0",
                               )}:${String(seconds).padStart(2, "0")}`;
                             }
                           }
@@ -560,7 +556,7 @@ export default function Dashboard() {
                           <React.Fragment key={cp.id}>
                             <Marker
                               key={cp.id}
-                              position={[cp.location.lat, cp.location.lng]}
+                              position={[cp.location?.lat, cp.location?.lng]}
                               icon={L.divIcon({
                                 className: "",
                                 html: `<div style="
@@ -581,7 +577,7 @@ export default function Dashboard() {
                                 permanent
                               >
                                 <div className="text-sm text-center">
-                                  <div>{cp.name}</div>
+                                  <p className="font-medium">{cp.name}</p>
                                   <span className="font-sans">
                                     {latestLog?.createdAtRaw.toLocaleString(
                                       "uz-UZ",
@@ -592,14 +588,14 @@ export default function Dashboard() {
                                         hour: "2-digit",
                                         minute: "2-digit",
                                         hour12: false,
-                                      }
+                                      },
                                     )}
                                   </span>
                                   {latestLog && (
-                                    <bold className="font-bold">
+                                    <b className="font-bold">
                                       <br />
                                       {latestLog.guard}
-                                    </bold>
+                                    </b>
                                   )}
                                   {timeDiff && (
                                     <div className="text-blue-600 font-semibold">
