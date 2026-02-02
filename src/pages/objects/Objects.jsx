@@ -51,9 +51,11 @@ const MapContainerWrapper = ({
   modalOpen,
   setZoom,
   onAddCheckpoint,
+  onObjectMove, // 🆕 Yangi prop: Obyektni siljitish uchun
   mapType = "y",
 }) => {
   const mapRef = useRef(null);
+  const markerRef = useRef(null); // 🆕 Marker uchun ref
 
   useEffect(() => {
     if (modalOpen && mapRef.current) {
@@ -73,13 +75,24 @@ const MapContainerWrapper = ({
     if (mapRef.current) {
       mapRef.current.setZoom(zoom);
     }
-  }, [zoom]); // 🔥 zoom o‘zgarganda sinxron bo‘lsin
+  }, [zoom]);
 
   const mapClickHandler = (e) => {
     if (onAddCheckpoint) {
       const { lat, lng } = e.latlng;
       onAddCheckpoint(lat, lng);
     }
+  };
+
+  // 🆕 Marker eventlari
+  const markerEventHandlers = {
+    dragend() {
+      const marker = markerRef.current;
+      if (marker && onObjectMove) {
+        const { lat, lng } = marker.getLatLng();
+        onObjectMove({ lat, lng });
+      }
+    },
   };
 
   return (
@@ -104,8 +117,11 @@ const MapContainerWrapper = ({
       />
       {objectPosition && (
         <Marker
+          draggable={!!onObjectMove} // 🆕 Faqat edit rejimida draggable bo‘ladi
+          eventHandlers={markerEventHandlers} // 🆕 Drag tugaganda ishlaydi
           position={[objectPosition.lat, objectPosition.lng]}
           icon={objectIcon}
+          ref={markerRef}
         />
       )}
       {checkpoints?.map((cp, i) =>
@@ -628,6 +644,9 @@ const Objects = () => {
                   zoom={zoom}
                   whenCreated={(map) => {
                     map.on("zoomend", () => setZoom(map.getZoom())); // 🧠 zoom har safar o‘zgarganda saqlab boradi
+                    setTimeout(() => {
+                      map.invalidateSize();
+                    }, 500);
                   }}
                   style={{ height: "500px", width: "100%" }}
                   attributionControl={false}
@@ -949,6 +968,7 @@ const Objects = () => {
               modalOpen={isEditModalOpen}
               setZoom={setZoom}
               mapType={mapType}
+              onObjectMove={(newPos) => setObjectPosition(newPos)} // 🆕 Obyektni surish funksiyasi
               onAddCheckpoint={(lat, lng) => {
                 setCheckpoints((prev) => [
                   ...prev,
