@@ -6,6 +6,7 @@ import {
   Form,
   Input,
   Modal,
+  Popconfirm,
   Select,
   Space,
   Table,
@@ -111,12 +112,16 @@ const Users = () => {
       title: "Amallar",
       render: (_, record) => (
         <Space>
-          <Button
-            style={{ color: "#ff4d4f" }} // danger
-            onClick={() => handleDelete(record.id)}
+          <Popconfirm
+            title="Rostdan ham o'chirmoqchimisiz?"
+            onConfirm={() => handleDelete(record.id)}
           >
-            O‘chirish
-          </Button>
+            <Button
+              danger
+            >
+              O‘chirish
+            </Button>
+          </Popconfirm>
 
           <Button
             // type="text"
