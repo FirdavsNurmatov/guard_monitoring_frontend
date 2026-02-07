@@ -86,7 +86,7 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
   const [objectName, setObjectName] = useState("");
   const [objectType, setObjectType] = useState("MAP");
   const [zoom, setZoom] = useState(15);
-  const [mapType] = useState("y");
+  const [mapType, setMapType] = useState("m");
 
   const {
     state: objectPosition,
@@ -377,6 +377,19 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
       {/* MAP */}
       {objectType === "MAP" && (
         <div className="mt-4 mb-6">
+          <div className="mb-2">
+              <Select
+              value={mapType}
+              onChange={setMapType}
+              style={{ width: 220 }}
+            >
+              <Select.Option value="m">🗺️ Map</Select.Option>
+              <Select.Option value="s">🛰️ Satellite</Select.Option>
+              <Select.Option value="y">🌍 Hybrid</Select.Option>
+              <Select.Option value="t">⛰️ Terrain</Select.Option>
+            </Select>
+          </div>
+
           <MapContainer
             center={[
               objectPosition?.lat || 41.31,
@@ -391,9 +404,10 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
             attributionControl={false}
           >
             <TileLayer
-              url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+              url={`https://mt1.google.com/vt/lyrs=${mapType}&x={x}&y={y}&z={z}`}
               attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
             />
+
             <LocationMarker />
             {objectPosition && (
               <MapControls
