@@ -11,7 +11,7 @@ import { useState } from "react";
 
 const { Header, Sider, Content } = Layout;
 
-export default function MainLayout() {
+export default function SuperAdminLayout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -19,8 +19,9 @@ export default function MainLayout() {
   } = theme.useToken();
 
   const selectedKey = (() => {
-    // if (location.pathname.startsWith("/admin/object")) return "1";
-    if (location.pathname.startsWith("/admin/users")) return "2";
+    if (location.pathname.startsWith("/superadmin/organizations")) return "1";
+    if (location.pathname.startsWith("/superadmin/objects")) return "2";
+    if (location.pathname.startsWith("/superadmin/users")) return "3";
     return "";
   })();
 
@@ -37,29 +38,29 @@ export default function MainLayout() {
             borderBottom: "1px solid rgba(255,255,255,0.2)",
           }}
         >
-          🛠️ Admin panel
+          Super Admin panel
         </div>
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[selectedKey]}
           items={[
-            // {
-            //   key: "1",
-            //   icon: <PictureOutlined />,
-            //   label: (
-            //     <Link to="/admin/object">Xarita rasmini o‘zgartirish</Link>
-            //   ),
-            // },
+            {
+              key: "1",
+              icon: <PictureOutlined />,
+              label: (
+                <Link to="/superadmin/organizations">Organizatsiyalar</Link>
+              ),
+            },
             {
               key: "2",
-              icon: <UsergroupAddOutlined />,
-              label: <Link to="/admin/users">Foydalanuvchilar</Link>,
+              icon: <PictureOutlined />,
+              label: <Link to="/superadmin/objects">Obyektlar</Link>,
             },
             {
               key: "3",
-              icon: <DashboardOutlined />,
-              label: <Link to="/monitoring">Kuzatuv paneli</Link>,
+              icon: <UsergroupAddOutlined />,
+              label: <Link to="/superadmin/users">Foydalanuvchilar</Link>,
             },
           ]}
         />

@@ -16,6 +16,8 @@ export default function Login() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
       const res = await instance.post("/auth/login", {
         login: values.login,
         password: values.password,
@@ -23,7 +25,7 @@ export default function Login() {
       const accessToken = res.data?.data?.access_token;
       const role = res?.data?.data?.role;
 
-      if (!["ADMIN", "OPERATOR"].includes(role)) {
+      if (!["SUPERADMIN", "ADMIN", "OPERATOR"].includes(role)) {
         throw new Error("Access Denied for " + role);
       }
 
@@ -35,8 +37,12 @@ export default function Login() {
 
       Cookies.set("accessToken", accessToken);
 
+      if (role === "SUPERADMIN")
+        return navigate("/superadmin", { replace: true });
       return navigate("/monitoring", { replace: true });
     } catch (error) {
+      // console.log(error);
+
       if (!error.message.startsWith("Access Denied"))
         setApiError("Username yoki parol noto'g'ri! Qayta urinib ko'ring!");
       else if (!error.message.includes("not found")) {

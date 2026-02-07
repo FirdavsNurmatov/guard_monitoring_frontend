@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Spin, Table, Button, Modal, Select } from "antd";
-import { instance } from "../config/axios-instance";
+import { instance } from "../../config/axios-instance";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/useAuthStore";
-import { socket } from "../config/socket";
+import { useAuthStore } from "../../store/useAuthStore";
+import { socket } from "../../config/socket";
 import toast from "react-hot-toast";
 import Noty from "noty";
 import "noty/lib/noty.css";
@@ -17,7 +17,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { CheckpointMarker } from "../components/CheckpointMarker";
+import { CheckpointMarker } from "../../components/CheckpointMarker";
 
 // default icon to fix missing marker
 delete L.Icon.Default.prototype._getIconUrl;
@@ -183,7 +183,7 @@ export default function Dashboard() {
       // 🔊 audio va noty xabarnoma
       const audio = new Audio("/sound-example.wav");
       audio.play().catch((err) => {
-        console.log(err);
+        // console.log(err);
       });
 
       new Noty({
