@@ -4,13 +4,7 @@ import toast from "react-hot-toast";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { instance } from "../../../../config/axios-instance";
 import CheckpointsForm from "./CheckpointsForm";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Tooltip,
-  useMapEvents,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import MapControls from "./MapControl";
@@ -129,16 +123,24 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
     if (open && mapRef.current) {
       const timer = setTimeout(() => {
         mapRef.current.invalidateSize();
+        window.dispatchEvent(new Event('resize'));
         if (objectPosition) {
           mapRef.current.setView(
             [objectPosition.lat, objectPosition.lng],
             zoom,
+            { animate: false }
           );
         }
-      }, 500);
+      }, 100);
       return () => clearTimeout(timer);
     }
-  }, [open, objectPosition, zoom]);
+  }, [open]);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.on("zoomend", () => setZoom(mapRef.current.getZoom()));
+    }
+  }, [open]);
 
   /* ===== RESET ON CLOSE ===== */
   useEffect(() => {
@@ -192,6 +194,20 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
   );
 
   /* ================= MAP HANDLERS ================= */
+
+  const MapResize = () => {
+    const map = useMap();
+    
+    useEffect(() => {
+      if (open) {
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      }
+    }, [open]);
+    
+    return null;
+  };
 
   const handleAddCheckpoint = useCallback((lat, lng) => {
     setCheckpoints((prev) => [
@@ -396,10 +412,7 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
               objectPosition?.lng || 69.28,
             ]}
             zoom={zoom || 15}
-            whenCreated={(map) => {
-              mapRef.current = map; // 🟢 bu yer juda muhim
-              map.on("zoomend", () => setZoom(map.getZoom()));
-            }}
+            ref={mapRef}
             style={{ height: "500px", width: "100%" }}
             attributionControl={false}
           >
@@ -409,6 +422,7 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
             />
 
             <LocationMarker />
+            <MapResize />
             {objectPosition && (
               <MapControls
                 onUndo={undoCenter}
