@@ -259,9 +259,19 @@ export default function Dashboard() {
 
   const guardColumns = [
     { title: "Login", dataIndex: "login", key: "login" },
-    { title: "Username", dataIndex: "username", key: "username" },
-    { title: "Checkpoint", dataIndex: "checkpointName", key: "checkpointName" },
-    { title: "Status", dataIndex: "status", key: "status" },
+    { title: "Foydalanuvchi nomi", dataIndex: "username", key: "username" },
+    { title: "Nazorat punkti", dataIndex: "checkpointName", key: "checkpointName" },
+    { 
+      title: "Holati", 
+      dataIndex: "status", 
+      key: "status",
+      render: (status) =>
+        status === "ON_TIME"
+          ? "Vaqtida kelgan"
+          : status === "LATE"
+            ? "Ozgina kechikib kelgan"
+            : "Kech kelgan",
+    },
   ];
 
   const journalLogColumns = [
@@ -271,7 +281,11 @@ export default function Dashboard() {
       key: "id",
       width: 80,
     },
-    { title: "Kim", dataIndex: "guard", key: "guard" },
+    {
+      title: "Xodim",
+      dataIndex: "guard",
+      key: "guard",
+    },
     { title: "Punkt nomi", dataIndex: "checkpoint", key: "checkpoint" },
     {
       title: "Kelgan sana",
@@ -300,11 +314,21 @@ export default function Dashboard() {
   ];
 
   const logColumns = [
-    { title: "Guard", dataIndex: "guard", key: "guard" },
-    { title: "Checkpoint", dataIndex: "checkpoint", key: "checkpoint" },
-    { title: "Status", dataIndex: "status", key: "status" },
+    { title: "Xodim", dataIndex: "guard", key: "guard" },
+    { title: "Nazorat punkti", dataIndex: "checkpoint", key: "checkpoint" },
+    { 
+      title: "Holati", 
+      dataIndex: "status", 
+      key: "status",
+      render: (status) =>
+        status === "ON_TIME"
+          ? "Vaqtida kelgan"
+          : status === "LATE"
+            ? "Ozgina kechikib kelgan"
+            : "Kech kelgan",
+    },
     {
-      title: "Time",
+      title: "Vaqt",
       dataIndex: "createdAtRaw",
       render: (time) =>
         new Date(time).toLocaleTimeString("uz-UZ", {
@@ -377,13 +401,13 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-2 items-center">
           <Button type="primary" onClick={() => setJournal(true)}>
-            Jurnal
+            Jurnallar
           </Button>
           <Button type="primary" onClick={() => setShowTables(true)}>
-            Tafsilotlar
+            Batafsil ma'lumotlar
           </Button>
           {user?.role === "ADMIN" && (
-            <Button onClick={() => navigate("/admin")}>Admin Panel</Button>
+            <Button onClick={() => navigate("/admin")}>Admin Paneli</Button>
           )}
         </div>
       </div>
@@ -640,7 +664,7 @@ export default function Dashboard() {
 
           {/* Tafsilotlar Modal */}
           <Modal
-            title="Tafsilotlar"
+            title="Batafsil ma'lumotlar"
             open={showTables}
             onCancel={() => setShowTables(false)}
             footer={null}
@@ -648,7 +672,7 @@ export default function Dashboard() {
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="border rounded-xl p-4">
-                <Title level={4}>So‘nggi Loglar</Title>
+                <Title level={4}>So'nggi yozuvlar</Title>
                 <Table
                   dataSource={logs.map((l, i) => ({ ...l, key: i }))}
                   columns={logColumns}
@@ -657,7 +681,7 @@ export default function Dashboard() {
                 />
               </div>
               <div className="border rounded-xl p-4">
-                <Title level={4}>Xodimlar</Title>
+                <Title level={4}>Xodimlar ro'yxati</Title>
                 <Table
                   dataSource={guards.map((g, i) => ({ ...g, key: i }))}
                   columns={guardColumns}

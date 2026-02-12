@@ -84,7 +84,7 @@ const Users = () => {
       toast.success("Foydalanuvchi muvaffaqiyatli o'chirildi");
       setLoading(true);
     } catch (error) {
-      toast.error("Foydalanuvchini o'chirildi xatolik yuz berdi");
+      toast.error("Foydalanuvchini o'chirishda xatolik yuz berdi");
     }
   };
 
@@ -188,7 +188,7 @@ const Users = () => {
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={700}
-        title="Foydalanuvchi tafsilotlari"
+        title="Foydalanuvchi ma'lumotlari"
       >
         {selected && (
           <Descriptions bordered column={1}>
