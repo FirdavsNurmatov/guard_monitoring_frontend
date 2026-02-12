@@ -138,6 +138,9 @@ const Organizations = () => {
         <Space>
           <Popconfirm
             title="Rostdan ham o'chirmoqchimisiz?"
+            okText="Ha"
+            cancelText="Yo‘q"
+            okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record.id)}
           >
             <Button danger>O‘chirish</Button>

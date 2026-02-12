@@ -1,9 +1,11 @@
 import { Modal, Input, Button, InputNumber, Select } from "antd";
 import toast from "react-hot-toast";
 import MapContainerWrapper from "./MapContainerWrapper";
-import CheckpointsForm from "./CheckpointsForm";
 import { useState, useEffect } from "react";
 import { instance } from "../../../../config/axios-instance";
+import { Upload } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { Popconfirm } from "antd";
 
 const { Option } = Select;
 
@@ -18,6 +20,8 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
   const [apiError, setApiError] = useState("");
   const [cardNumberErrors, setCardNumberErrors] = useState({});
   const [image, setImage] = useState(null);
+  const [file, setFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // ✅ objectData o‘zgarganda backend’dan full object fetch
   useEffect(() => {
@@ -40,12 +44,43 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
   // ✅ fullObject o‘zgarganda state’larni yangilash
   useEffect(() => {
     if (!fullObject) return;
+
     setObjectName(fullObject.name || "");
     setObjectType(fullObject.type || "IMAGE");
     setZoom(fullObject.zoom || 15);
     setObjectPosition(fullObject.position || null);
     setCheckpoints(fullObject.checkpoints || []);
+
+    setFile(null);
+    setPreviewImage(null);
+    if (fullObject.imageUrl) {
+      setPreviewImage(import.meta.env.VITE_SERVER_PORT + fullObject.imageUrl);
+    }
   }, [fullObject]);
+
+  const handleImageUpload = (info) => {
+    if (!info.fileList?.length) return;
+
+    const f = info.fileList[0].originFileObj;
+    if (!f) return;
+
+    setFile(f);
+
+    const reader = new FileReader();
+    reader.onload = (e) => setPreviewImage(e.target.result);
+    reader.readAsDataURL(f);
+  };
+
+  const handleRemoveImage = async () => {
+    try {
+      await instance.delete(`/superadmin/object/${fullObject.id}/image`);
+      setPreviewImage(null);
+      setFile(null);
+      toast.success("Rasm o‘chirildi");
+    } catch {
+      toast.error("Rasmni o‘chirishda xatolik");
+    }
+  };
 
   const handleAddCheckpoint = (lat, lng) => {
     setCheckpoints((prev) => [
@@ -116,6 +151,8 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       const updatedCheckpoints = checkpoints.map((cp, i) => ({
         ...cp,
         name: cp.name?.trim() || `${i + 1}-punkt`,
+        position: cp?.position || { xPercent: 15, yPercent: 15 },
+        location: cp?.location || { lat: 41.3, lng: 69.3 },
       }));
 
       // 3️⃣ Object update
@@ -123,6 +160,14 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
         name: objectName,
         zoom,
       });
+
+      // 🔥 Agar yangi file bo‘lsa — image update
+      if (file) {
+        const fd = new FormData();
+        fd.append("file", file);
+
+        await instance.post(`/superadmin/object/${fullObject.id}/image`, fd);
+      }
 
       // 4️⃣ Checkpoints update/create
       for (const cp of updatedCheckpoints) {
@@ -166,30 +211,68 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       </div>
 
       {objectType === "IMAGE" && (
-        <div
-          className="mt-4 relative inline-block border rounded-xl shadow-md cursor-crosshair"
-          onClick={handleImageClick}
-        >
-          <img
-            src={import.meta.env.VITE_SERVER_PORT + fullObject?.imageUrl}
-            alt="map"
-            className="w-full max-h-[80vh] object-contain rounded-xl"
-          />
-          {checkpoints?.map((point, index) => (
-            <div
-              key={index}
-              className="absolute flex"
-              style={{
-                top: `${point?.position?.yPercent || 5}%`,
-                left: `${point?.position?.xPercent || 10}%`,
-              }}
+        <div className="mt-4 flex flex-col gap-3">
+          <div className="flex justify-start gap-3">
+            {/* Upload button */}
+            <Upload
+              accept="image/*"
+              beforeUpload={() => false}
+              onChange={handleImageUpload}
+              maxCount={1}
+              showUploadList={false}
             >
-              <div className="w-4 h-4 z-10 bg-red-500 rounded-full border-2 border-white shadow" />
-              <span className="mt-1 text-xs bg-white px-1 rounded shadow">
-                {point?.name || `${index + 1}-punkt`}
-              </span>
+              <Button icon={<UploadOutlined />}>
+                {previewImage ? "Rasmni almashtirish" : "Rasm yuklash"}
+              </Button>
+            </Upload>
+
+            {previewImage && (
+              <Popconfirm
+                title="Rasmni o‘chirmoqchimisiz?"
+                description="Bu amalni ortga qaytarib bo‘lmaydi"
+                onConfirm={handleRemoveImage}
+                okText="Ha"
+                cancelText="Yo‘q"
+                okButtonProps={{ danger: true }}
+              >
+                <Button danger>🗑️ Rasmni o‘chirish</Button>
+              </Popconfirm>
+            )}
+          </div>
+
+          {/* Preview */}
+          {previewImage && (
+            <div
+              className="relative border rounded-xl shadow-md cursor-crosshair overflow-hidden"
+              onClick={handleImageClick}
+              style={{ maxHeight: "80vh" }}
+            >
+              <img
+                src={previewImage}
+                alt="object"
+                className="w-full object-contain rounded-xl"
+              />
+
+              {checkpoints
+                ?.filter((cp) => cp.position)
+                .map((point, index) => (
+                  <div
+                    key={index}
+                    className="absolute flex flex-col items-center"
+                    style={{
+                      top: `${point?.position?.yPercent}%`,
+                      left: `${point?.position?.xPercent}%`,
+                      transform: "translate(-50%, -100%)",
+                    }}
+                  >
+                    <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow" />
+                    <span className="mt-1 text-xs bg-white px-1 rounded shadow">
+                      {point?.name || `${index + 1}-punkt`}
+                    </span>
+                  </div>
+                ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
@@ -251,7 +334,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
             >
               <Input
                 placeholder="Checkpoint name"
-                value={cp.name || `${i + 1}-punkt`}
+                value={cp.name}
                 onChange={(e) =>
                   handleChangeCheckpoint(i, "name", e.target.value)
                 }
@@ -283,7 +366,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               <InputNumber
                 min={0}
                 max={100}
-                value={cp?.position?.xPercent || 0}
+                value={cp?.position?.xPercent}
                 onChange={(val) =>
                   handleChangeCheckpoint(i, "position", {
                     ...cp.position,
@@ -296,7 +379,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               <InputNumber
                 min={0}
                 max={100}
-                value={cp?.position?.yPercent || 0}
+                value={cp?.position?.yPercent}
                 onChange={(val) =>
                   handleChangeCheckpoint(i, "position", {
                     ...cp.position,
@@ -308,7 +391,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               />
               <InputNumber
                 placeholder="Lat"
-                value={cp?.location?.lat || 0}
+                value={cp?.location?.lat}
                 onChange={(val) =>
                   handleChangeCheckpoint(i, "location", {
                     ...cp.location,
@@ -319,7 +402,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               />
               <InputNumber
                 placeholder="Lng"
-                value={cp?.location?.lng || 0}
+                value={cp?.location?.lng}
                 onChange={(val) =>
                   handleChangeCheckpoint(i, "location", {
                     ...cp.location,
@@ -338,7 +421,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                   setCheckpoints(checkpoints.filter((_, idx) => idx !== i));
                 }}
               >
-                🗑️
+                O'chirish
               </Button>
             </div>
           ))}
