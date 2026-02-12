@@ -278,9 +278,9 @@ export default function Dashboard() {
       dataIndex: "createdAtRaw",
       render: (time) =>
         new Date(time).toLocaleTimeString("uz-UZ", {
-          day: "numeric",
-          month: "numeric",
           year: "numeric",
+          month: "numeric",
+          day: "numeric",
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -308,9 +308,9 @@ export default function Dashboard() {
       dataIndex: "createdAtRaw",
       render: (time) =>
         new Date(time).toLocaleTimeString("uz-UZ", {
-          day: "numeric",
-          month: "numeric",
           year: "numeric",
+          month: "numeric",
+          day: "numeric",
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -325,15 +325,15 @@ export default function Dashboard() {
           <Title level={3} className="!mb-0">
             {selectedMap ? selectedMap.name : "Obyekt tanlanmagan"}
           </Title>
-          <span className="text-black">
+          {/* <span className="text-black">
             {now.toLocaleTimeString("uz-UZ", {
-              day: "numeric",
-              month: "numeric",
               year: "numeric",
+              month: "numeric",
+              day: "numeric",
               hour: "2-digit",
               minute: "2-digit",
             })}
-          </span>
+          </span> */}
           <div className="flex gap-2">
             <Button
               color="purple"
@@ -582,9 +582,9 @@ export default function Dashboard() {
                                     {latestLog?.createdAtRaw.toLocaleString(
                                       "uz-UZ",
                                       {
-                                        year: "numeric",
-                                        month: "2-digit",
-                                        day: "2-digit",
+                                        // year: "numeric",
+                                        // month: "2-digit",
+                                        // day: "2-digit",
                                         hour: "2-digit",
                                         minute: "2-digit",
                                         hour12: false,
