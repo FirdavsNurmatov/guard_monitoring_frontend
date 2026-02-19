@@ -1,4 +1,51 @@
-export function CheckpointMarker({ cp, latestLog, timeDiff, style = {} }) {
+import React, { useEffect, useState, useMemo } from "react";
+import { Tooltip } from "react-leaflet";
+
+export const CheckpointMarker = React.memo(function CheckpointMarker({
+  cp,
+  latestLog,
+  objectType = "IMAGE",
+  style = {},
+}) {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🔥 Countdown hisoblash
+  const timeDiff = useMemo(() => {
+    if (!latestLog) return null;
+
+    const now = Date.now();
+    const diffSec = Math.floor((now - latestLog.createdAtRaw) / 1000);
+
+    const totalTime = (cp.normalTime + cp.passTime) * 60;
+    const remain = Math.max(totalTime - diffSec, 0);
+
+    if (remain <= 0) return null;
+
+    const hours = Math.floor(remain / 3600);
+    const minutes = Math.floor((remain % 3600) / 60);
+    const seconds = remain % 60;
+
+    if (hours > 0) {
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0",
+      )}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0",
+    )}`;
+  }, [tick, latestLog, cp.normalTime, cp.passTime]);
+
   const statusColors = {
     ON_TIME: "bg-green-500",
     LATE: "bg-yellow-400",
@@ -8,51 +55,76 @@ export function CheckpointMarker({ cp, latestLog, timeDiff, style = {} }) {
   const color = latestLog ? statusColors[latestLog.status] : "bg-gray-400";
 
   return (
-    <div
-      className="text-sm text-center absolute flex flex-col items-center"
-      style={style}
-    >
-      <div className="relative group">
-        {/* 🔴 marker doira */}
-        <div
-          className={`w-4 h-4 rounded-full ${color} border-2 border-white shadow`}
-        />
+    <>
+      {objectType === "MAP" ? (
+        <Tooltip offset={[-30, -5]} permanent>
+          <div
+            className="text-sm text-center absolute flex flex-col items-center"
+            style={style}
+          >
+            <div className="relative">
+              <div
+                className={`w-4 h-4 rounded-full ${color} border-2 border-white`}
+              />
 
-        {/* 🟦 tooltip */}
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white rounded-md shadow px-2 py-1 whitespace-nowrap z-50">
+                <p>{cp.name}</p>
+
+                {latestLog && (
+                  <>
+                    <span>
+                      {latestLog.createdAtRaw.toLocaleString("uz-UZ", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
+                    </span>
+
+                    <b className="block">{latestLog.guard}</b>
+                  </>
+                )}
+
+                {timeDiff && (
+                  <div className="text-blue-600 font-semibold">{timeDiff}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Tooltip>
+      ) : (
         <div
-          className="
-            absolute bottom-5 left-1/2 -translate-x-1/2
-            bg-white rounded-md shadow px-2 py-1
-            pointer-events-none transition
-            whitespace-nowrap z-50
-          "
+          className="text-sm text-center absolute flex flex-col items-center"
+          style={style}
         >
-          <p>{cp.name}</p>
-          <span className="font-sans">
-            {latestLog && (
-              <>
-                {latestLog.createdAtRaw.toLocaleString("uz-UZ", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
-              </>
-            )}
-            {latestLog && (
-              <b className="font-bold">
-                <br />
-                {latestLog.guard}
-              </b>
-            )}
-          </span>
-          {timeDiff && (
-            <div className="text-blue-600 font-semibold">{timeDiff}</div>
-          )}
+          <div className="relative">
+            <div
+              className={`w-4 h-4 rounded-full ${color} border-2 border-white`}
+            />
+
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white rounded-md shadow px-2 py-1 whitespace-nowrap z-50">
+              <p>{cp.name}</p>
+
+              {latestLog && (
+                <>
+                  <span>
+                    {latestLog.createdAtRaw.toLocaleString("uz-UZ", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </span>
+
+                  <b className="block">{latestLog.guard}</b>
+                </>
+              )}
+
+              {timeDiff && (
+                <div className="text-blue-600 font-semibold">{timeDiff}</div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
-}
+});

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Typography, Spin, Table, Button, Modal, Select } from "antd";
 import { instance } from "../../config/axios-instance";
 import { useNavigate } from "react-router-dom";
@@ -8,24 +8,24 @@ import toast from "react-hot-toast";
 import Noty from "noty";
 import "noty/lib/noty.css";
 import "noty/src/themes/metroui.scss";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Tooltip,
-  Polyline,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { CheckpointMarker } from "../../components/CheckpointMarker";
+import { useMemo } from "react";
 
 // default icon to fix missing marker
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+// delete L.Icon.Default.prototype._getIconUrl;
+// L.Icon.Default.mergeOptions({
+//   iconRetinaUrl:
+//     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+//   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+//   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+// });
+const invisibleIcon = L.divIcon({
+  className: "",
+  html: `<div style="width:0;height:0;"></div>`,
+  iconSize: [0, 0],
 });
 
 const { Title } = Typography;
@@ -42,14 +42,44 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showTables, setShowTables] = useState(false);
-  const [now, setNow] = useState(new Date());
   const [gpsPoints, setGpsPoints] = useState([]);
   const [mapType, setMapType] = useState("y"); // 🗺️ default: hybrid
   const [objectType, setObjectType] = useState("MAP");
+  const mapWrapperRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const baseUrl = import.meta.env.VITE_SERVER_PORT;
   const navigate = useNavigate();
   const { user } = useAuthStore((store) => store);
+
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+
+      // Leaflet map size yangilash
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 100);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!mapWrapperRef.current) return;
+
+    if (!document.fullscreenElement) {
+      await mapWrapperRef.current.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  };
 
   const fetchAllMaps = async () => {
     try {
@@ -157,9 +187,36 @@ export default function Dashboard() {
     }
   }, [maps]); // 🟢 faqat maps yangilansa, lekin fetch ichida emas
 
+  // useEffect(() => {
+  //   const timer = setInterval(() => setNow(new Date()), 1000);
+  //   return () => clearInterval(timer);
+  // }, []);
+
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
+    audioRef.current = new Audio("/sound-example.wav");
+    audioRef.current.preload = "auto";
+  }, []);
+
+  // const [audioEnabled, setAudioEnabled] = useState(false);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (audioRef.current) {
+        audioRef.current
+          .play()
+          .then(() => {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          })
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener("click", unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener("click", unlockAudio);
+    };
   }, []);
 
   useEffect(() => {
@@ -181,9 +238,14 @@ export default function Dashboard() {
       };
 
       // 🔊 audio va noty xabarnoma
-      const audio = new Audio("/sound-example.wav");
-      audio.play().catch((err) => {
-        // console.log(err);
+      // const audio = new Audio("/sound-example.wav");
+      // audio.play().catch((err) => {
+      //   // console.log(err);
+      // });
+
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((err) => {
+        console.log("Audio blocked:", err);
       });
 
       new Noty({
@@ -260,10 +322,14 @@ export default function Dashboard() {
   const guardColumns = [
     { title: "Login", dataIndex: "login", key: "login" },
     { title: "Foydalanuvchi nomi", dataIndex: "username", key: "username" },
-    { title: "Nazorat punkti", dataIndex: "checkpointName", key: "checkpointName" },
-    { 
-      title: "Holati", 
-      dataIndex: "status", 
+    {
+      title: "Nazorat punkti",
+      dataIndex: "checkpointName",
+      key: "checkpointName",
+    },
+    {
+      title: "Holati",
+      dataIndex: "status",
       key: "status",
       render: (status) =>
         status === "ON_TIME"
@@ -316,9 +382,9 @@ export default function Dashboard() {
   const logColumns = [
     { title: "Xodim", dataIndex: "guard", key: "guard" },
     { title: "Nazorat punkti", dataIndex: "checkpoint", key: "checkpoint" },
-    { 
-      title: "Holati", 
-      dataIndex: "status", 
+    {
+      title: "Holati",
+      dataIndex: "status",
       key: "status",
       render: (status) =>
         status === "ON_TIME"
@@ -341,6 +407,21 @@ export default function Dashboard() {
       key: "createdAt",
     },
   ];
+
+  // 🔥 Eng so‘nggi loglarni zoneId bo‘yicha map qilib olamiz
+  const latestLogsByZone = useMemo(() => {
+    const map = {};
+
+    for (const log of logs) {
+      const existing = map[log.zoneId];
+
+      if (!existing || log.createdAtRaw > existing.createdAtRaw) {
+        map[log.zoneId] = log;
+      }
+    }
+
+    return map;
+  }, [logs]);
 
   return (
     <div className="h-screen w-screen overflow-hidden">
@@ -400,6 +481,13 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex gap-2 items-center">
+          {/* <Button
+            type={audioEnabled ? "primary" : "default"}
+            onClick={() => setAudioEnabled(true)}
+          >
+            🔔 Ovoz yoqish
+          </Button> */}
+
           <Button type="primary" onClick={() => setJournal(true)}>
             Jurnallar
           </Button>
@@ -422,7 +510,12 @@ export default function Dashboard() {
       {!loading && selectedMap && (
         <>
           {selectedMap && (
-            <div className="relative h-11/12 w-11/12 border rounded-xl overflow-hidden m-auto">
+            <div
+              ref={mapWrapperRef}
+              className={`relative ${
+                isFullscreen ? "h-screen w-screen" : "h-11/12 w-11/12 m-auto"
+              } border rounded-xl overflow-hidden`}
+            >
               {objectType === "IMAGE" ? (
                 <>
                   <img
@@ -432,9 +525,10 @@ export default function Dashboard() {
                   />
 
                   {selectedMap.checkpoints?.map((cp) => {
-                    const latestLog = [...logs]
-                      .filter((l) => l.zoneId === cp.id)
-                      .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
+                    // const latestLog = [...logs]
+                    //   .filter((l) => l.zoneId === cp.id)
+                    //   .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
+                    const latestLog = latestLogsByZone[cp.id];
 
                     const statusColors = {
                       ON_TIME: "bg-green-500",
@@ -483,7 +577,6 @@ export default function Dashboard() {
                         key={cp.id}
                         cp={cp}
                         latestLog={latestLog}
-                        timeDiff={timeDiff}
                         style={{
                           top: `${cp.position?.yPercent || 0}%`,
                           left: `${cp.position?.xPercent || 0}%`,
@@ -513,6 +606,14 @@ export default function Dashboard() {
                         <Option value="p">⛰️ Relyef</Option>
                       </Select>
                     </div>
+                    <div
+                      className="absolute top-3 right-5 z-[1000] bg-white rounded-md shadow-md p-2 flex items-center gap-2"
+                      style={{ fontSize: "14px" }}
+                    >
+                      <Button onClick={toggleFullscreen}>
+                        {isFullscreen ? "Chiqish" : "To'liq ekran"}
+                      </Button>
+                    </div>
 
                     <MapContainer
                       center={selectedMap.position || [41, 61]}
@@ -530,9 +631,10 @@ export default function Dashboard() {
                       {selectedMap.checkpoints?.map((cp) => {
                         if (!cp.location?.lat || !cp.location?.lng) return null;
 
-                        const latestLog = [...logs]
-                          .filter((l) => l.zoneId === cp.id)
-                          .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
+                        // const latestLog = [...logs]
+                        //   .filter((l) => l.zoneId === cp.id)
+                        //   .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
+                        const latestLog = latestLogsByZone[cp.id];
 
                         const statusColors = {
                           ON_TIME: "green",
@@ -581,53 +683,14 @@ export default function Dashboard() {
                             <Marker
                               key={cp.id}
                               position={[cp.location?.lat, cp.location?.lng]}
-                              icon={L.divIcon({
-                                className: "",
-                                html: `<div style="
-                                  background:${color};
-                                  width:16px;
-                                  height:16px;
-                                  border-radius:50%;
-                                  border:2px solid white;
-                                  display:flex;
-                                  align-items:center;
-                                  justify-content:center;">
-                                </div>`,
-                              })}
+                              icon={invisibleIcon}
                             >
-                              <Tooltip
-                                direction="top"
-                                offset={[0, -10]}
-                                permanent
-                              >
-                                <div className="text-sm text-center">
-                                  <p className="font-medium">{cp.name}</p>
-                                  <span className="font-sans">
-                                    {latestLog?.createdAtRaw.toLocaleString(
-                                      "uz-UZ",
-                                      {
-                                        // year: "numeric",
-                                        // month: "2-digit",
-                                        // day: "2-digit",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: false,
-                                      },
-                                    )}
-                                  </span>
-                                  {latestLog && (
-                                    <b className="font-bold">
-                                      <br />
-                                      {latestLog.guard}
-                                    </b>
-                                  )}
-                                  {timeDiff && (
-                                    <div className="text-blue-600 font-semibold">
-                                      {timeDiff}
-                                    </div>
-                                  )}
-                                </div>
-                              </Tooltip>
+                              <CheckpointMarker
+                                key={cp.id}
+                                cp={cp}
+                                latestLog={latestLog}
+                                objectType="MAP"
+                              />
                             </Marker>
                             {gpsPoints.length > 0 && (
                               <>
@@ -642,11 +705,11 @@ export default function Dashboard() {
                                   icon={L.divIcon({
                                     className: "",
                                     html: `<div style="
-                                      width:10px;
-                                      height:10px;
-                                      background-color:green;
-                                      border:2px solid black;
-                                      border-radius:50%;
+                                    width:10px;
+                                    height:10px;
+                                    background-color:green;
+                                    border:2px solid black;
+                                    border-radius:50%;
                                     "></div>`,
                                   })}
                                 />
