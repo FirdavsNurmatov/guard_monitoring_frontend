@@ -259,7 +259,7 @@ export default function Dashboard() {
         layout: "topRight",
         timeout: 4000,
       }).show();
-
+      
       // 🧩 logs update
       setLogs((prev) => [formattedLog, ...prev].slice(0, 50));
 
@@ -530,47 +530,47 @@ export default function Dashboard() {
                     //   .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
                     const latestLog = latestLogsByZone[cp.id];
 
-                    const statusColors = {
-                      ON_TIME: "bg-green-500",
-                      LATE: "bg-yellow-500",
-                      MISSED: "bg-red-500",
-                    };
-                    const statusColor = latestLog
-                      ? statusColors[latestLog.status] || "bg-gray-400"
-                      : "bg-gray-400";
+                    // const statusColors = {
+                    //   ON_TIME: "bg-green-500",
+                    //   LATE: "bg-yellow-500",
+                    //   MISSED: "bg-red-500",
+                    // };
+                    // const statusColor = latestLog
+                    //   ? statusColors[latestLog.status] || "bg-gray-400"
+                    //   : "bg-gray-400";
 
-                    let timeDiff = null;
-                    if (latestLog) {
-                      const now = Date.now();
-                      const diffSec = Math.floor(
-                        (now - latestLog.createdAtRaw) / 1000,
-                      );
+                    // let timeDiff = null;
+                    // if (latestLog) {
+                    //   const now = Date.now();
+                    //   const diffSec = Math.floor(
+                    //     (now - latestLog.createdAtRaw) / 1000,
+                    //   );
 
-                      let totalTime = (cp.passTime + cp.normalTime) * 60;
+                    //   let totalTime = (cp.passTime + cp.normalTime) * 60;
 
-                      const remain = Math.max(totalTime - diffSec, 0);
+                    //   const remain = Math.max(totalTime - diffSec, 0);
 
-                      if (remain > 0) {
-                        const hours = Math.floor(remain / 3600);
-                        const minutes = Math.floor((remain % 3600) / 60);
-                        const seconds = remain % 60;
+                    //   if (remain > 0) {
+                    //     const hours = Math.floor(remain / 3600);
+                    //     const minutes = Math.floor((remain % 3600) / 60);
+                    //     const seconds = remain % 60;
 
-                        // faqat soat bo‘lsa ko‘rsatamiz
-                        if (hours > 0) {
-                          timeDiff = `${String(hours).padStart(
-                            2,
-                            "0",
-                          )}:${String(minutes).padStart(2, "0")}:${String(
-                            seconds,
-                          ).padStart(2, "0")}`;
-                        } else {
-                          timeDiff = `${String(minutes).padStart(
-                            2,
-                            "0",
-                          )}:${String(seconds).padStart(2, "0")}`;
-                        }
-                      }
-                    }
+                    //     // faqat soat bo‘lsa ko‘rsatamiz
+                    //     if (hours > 0) {
+                    //       timeDiff = `${String(hours).padStart(
+                    //         2,
+                    //         "0",
+                    //       )}:${String(minutes).padStart(2, "0")}:${String(
+                    //         seconds,
+                    //       ).padStart(2, "0")}`;
+                    //     } else {
+                    //       timeDiff = `${String(minutes).padStart(
+                    //         2,
+                    //         "0",
+                    //       )}:${String(seconds).padStart(2, "0")}`;
+                    //     }
+                    //   }
+                    // }
 
                     return (
                       <CheckpointMarker
@@ -636,47 +636,47 @@ export default function Dashboard() {
                         //   .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
                         const latestLog = latestLogsByZone[cp.id];
 
-                        const statusColors = {
-                          ON_TIME: "green",
-                          LATE: "yellow",
-                          MISSED: "red",
-                        };
-                        const color = latestLog
-                          ? statusColors[latestLog.status]
-                          : "gray";
+                        // const statusColors = {
+                        //   ON_TIME: "green",
+                        //   LATE: "yellow",
+                        //   MISSED: "red",
+                        // };
+                        // const color = latestLog
+                        //   ? statusColors[latestLog.status]
+                        //   : "gray";
 
-                        let timeDiff = null;
-                        if (latestLog) {
-                          const now = Date.now();
-                          const diffSec = Math.floor(
-                            (now - latestLog.createdAtRaw) / 1000,
-                          );
+                        // let timeDiff = null;
+                        // if (latestLog) {
+                        //   const now = Date.now();
+                        //   const diffSec = Math.floor(
+                        //     (now - latestLog.createdAtRaw) / 1000,
+                        //   );
 
-                          let totalTime = (cp.normalTime + cp.passTime) * 60;
+                        //   let totalTime = (cp.normalTime + cp.passTime) * 60;
 
-                          const remain = Math.max(totalTime - diffSec, 0);
+                        //   const remain = Math.max(totalTime - diffSec, 0);
 
-                          if (remain > 0) {
-                            const hours = Math.floor(remain / 3600);
-                            const minutes = Math.floor((remain % 3600) / 60);
-                            const seconds = remain % 60;
+                        //   if (remain > 0) {
+                        //     const hours = Math.floor(remain / 3600);
+                        //     const minutes = Math.floor((remain % 3600) / 60);
+                        //     const seconds = remain % 60;
 
-                            // faqat soat bo‘lsa ko‘rsatamiz
-                            if (hours > 0) {
-                              timeDiff = `${String(hours).padStart(
-                                2,
-                                "0",
-                              )}:${String(minutes).padStart(2, "0")}:${String(
-                                seconds,
-                              ).padStart(2, "0")}`;
-                            } else {
-                              timeDiff = `${String(minutes).padStart(
-                                2,
-                                "0",
-                              )}:${String(seconds).padStart(2, "0")}`;
-                            }
-                          }
-                        }
+                        //     // faqat soat bo‘lsa ko‘rsatamiz
+                        //     if (hours > 0) {
+                        //       timeDiff = `${String(hours).padStart(
+                        //         2,
+                        //         "0",
+                        //       )}:${String(minutes).padStart(2, "0")}:${String(
+                        //         seconds,
+                        //       ).padStart(2, "0")}`;
+                        //     } else {
+                        //       timeDiff = `${String(minutes).padStart(
+                        //         2,
+                        //         "0",
+                        //       )}:${String(seconds).padStart(2, "0")}`;
+                        //     }
+                        //   }
+                        // }
 
                         return (
                           <React.Fragment key={cp.id}>
