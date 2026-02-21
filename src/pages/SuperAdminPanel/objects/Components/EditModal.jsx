@@ -122,10 +122,10 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
     ]);
   };
 
-  const handleDeleteCheckpoint = async (id, index) => {
+  const handleDeleteCheckpoint = async (id) => {
     try {
-      if (id) await instance.delete(`/checkpoint/${id}`);
-      setCheckpoints(checkpoints.filter((_, i) => i !== index));
+      if (id) await instance.delete(`/superadmin/checkpoint/${id}`);
+      setCheckpoints(checkpoints.filter((data) => data.id !== id));
       toast.success("🗑️ Punkt o‘chirildi");
     } catch (err) {
       toast.error("❌ Punktni o‘chirishda xatolik");
@@ -133,6 +133,9 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
   };
 
   const handleUpdate = async () => {
+    setCardNumberErrors({});
+    setApiError("");
+
     try {
       // 1️⃣ Duplicate card number tekshirish
       const cardNumbers = checkpoints
@@ -189,9 +192,22 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       fetchObjects();
       onClose();
     } catch (err) {
+      const data = err?.response?.data;
+
+      if (data?.cardNumber) {
+        setCardNumberErrors({ [data?.cardNumber]: "Duplicate" });
+        setApiError(`${data.cardNumber} - bu karta raqami allaqachon mavjud`);
+      } else if (data?.message) {
+        setApiError(data.message);
+      } else {
+        setApiError("Noma'lum xatolik");
+      }
+
       toast.error("❌ Yangilashda xatolik yuz berdi");
     }
   };
+
+  console.log(cardNumberErrors);
 
   return (
     <Modal
@@ -360,6 +376,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                 onChange={(e) =>
                   handleChangeCheckpoint(i, "cardNumber", e.target.value)
                 }
+                status={cardNumberErrors[cp.cardNumber] ? "error" : ""}
                 style={{ width: "25%" }}
               />
 
@@ -442,9 +459,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
           <Button type="primary" onClick={handleUpdate}>
             Saqlash
           </Button>
-          <Button onClick={() => setIsEditModalOpen(false)}>
-            Bekor qilish
-          </Button>
+          <Button onClick={onClose}>Bekor qilish</Button>
         </div>
       </div>
     </Modal>
