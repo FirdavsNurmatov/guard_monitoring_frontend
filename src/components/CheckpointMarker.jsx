@@ -5,7 +5,6 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
   cp,
   latestLog,
   objectType = "IMAGE",
-  style = {},
 }) {
   const [tick, setTick] = useState(0);
 
@@ -57,17 +56,10 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
   return (
     <>
       {objectType === "MAP" ? (
-        <Tooltip offset={[-30, -5]} permanent>
-          <div
-            className="text-sm text-center absolute flex flex-col items-center"
-            style={style}
-          >
+        <Tooltip offset={[0, 5]} direction="top" permanent>
+          <div className="text-sm text-center flex flex-col items-center">
             <div className="relative">
-              <div
-                className={`w-4 h-4 rounded-full ${color} border-2 border-white`}
-              />
-
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white rounded-md shadow px-2 py-1 whitespace-nowrap z-50">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white rounded-md px-2 py-1 whitespace-nowrap z-50">
                 <p>{cp.name}</p>
 
                 {latestLog && (
@@ -88,6 +80,8 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
                   <div className="text-blue-600 font-semibold">{timeDiff}</div>
                 )}
               </div>
+
+              <div className={`w-4 h-4 rounded-full ${color}`} />
             </div>
           </div>
         </Tooltip>

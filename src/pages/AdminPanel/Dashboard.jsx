@@ -240,7 +240,7 @@ export default function Dashboard() {
       // 🔊 audio va noty xabarnoma
       // const audio = new Audio("/sound-example.wav");
       // audio.play().catch((err) => {
-      //   // console.log(err);
+      //   console.log(err);
       // });
 
       audioRef.current.currentTime = 0;
