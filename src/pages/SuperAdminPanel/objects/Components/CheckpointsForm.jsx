@@ -85,32 +85,7 @@ const CheckpointsForm = ({
             style={{ width: "120px" }}
           />
 
-          {/* Latitude */}
-          <InputNumber
-            placeholder="Lat"
-            value={cp?.location?.lat ?? 0}
-            onChange={(val) =>
-              handleChange(i, "location", {
-                ...cp.location,
-                lat: val,
-              })
-            }
-            addonAfter="Lat"
-          />
-
-          {/* Longitude */}
-          <InputNumber
-            placeholder="Lng"
-            value={cp?.location?.lng ?? 0}
-            onChange={(val) =>
-              handleChange(i, "location", {
-                ...cp.location,
-                lng: val,
-              })
-            }
-            addonAfter="Lng"
-          />
-
+          
           {/* Delete */}
           <Button danger onClick={() => handleDelete(i)}>
             🗑️
