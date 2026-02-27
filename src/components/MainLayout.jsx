@@ -1,12 +1,12 @@
-import { Button, Layout, Menu, theme } from "antd";
+import { Button, Layout, Menu, Modal, theme } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   DashboardOutlined,
-  PictureOutlined,
   UsergroupAddOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 const { Header, Sider, Content } = Layout;
@@ -18,8 +18,10 @@ export default function MainLayout() {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  const navigate = useNavigate();
+  const [logoutOpen, setLogoutOpen] = useState(false);
+
   const selectedKey = (() => {
-    // if (location.pathname.startsWith("/admin/object")) return "1";
     if (location.pathname.startsWith("/admin/users")) return "2";
     return "";
   })();
@@ -43,14 +45,12 @@ export default function MainLayout() {
           theme="dark"
           mode="inline"
           selectedKeys={[selectedKey]}
+          onClick={({ key }) => {
+            if (key === "4") {
+              setLogoutOpen(true);
+            }
+          }}
           items={[
-            // {
-            //   key: "1",
-            //   icon: <PictureOutlined />,
-            //   label: (
-            //     <Link to="/admin/object">Xarita rasmini o‘zgartirish</Link>
-            //   ),
-            // },
             {
               key: "2",
               icon: <UsergroupAddOutlined />,
@@ -61,7 +61,26 @@ export default function MainLayout() {
               icon: <DashboardOutlined />,
               label: <Link to="/monitoring">Kuzatuv paneli</Link>,
             },
+            {
+              key: "4",
+              icon: <LogoutOutlined />,
+              danger: true,
+              label: <span onClick={() => setLogoutOpen(true)}>Chiqish</span>,
+            },
           ]}
+        />
+        <Modal
+          title="Tizimdan chiqmoqchimisiz?"
+          open={logoutOpen}
+          onOk={() => {
+            localStorage.removeItem("auth");
+            navigate("/", { replace: true });
+          }}
+          onCancel={() => setLogoutOpen(false)}
+          okText="Ha, chiqish"
+          cancelText="Bekor qilish"
+          okType="danger"
+          centered
         />
       </Sider>
       <Layout>
