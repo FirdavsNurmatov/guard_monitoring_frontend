@@ -5,6 +5,7 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
   cp,
   latestLog,
   objectType = "IMAGE",
+  style,
 }) {
   const [tick, setTick] = useState(0);
 
