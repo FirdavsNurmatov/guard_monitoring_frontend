@@ -46,13 +46,14 @@ const Objects = () => {
   const columns = [
     {
       title: "Rasm",
-      render: (_, record) => (
-        <img
-          src={`${import.meta.env.VITE_SERVER_PORT}${record?.imageUrl}`}
-          alt="Obyekt rasmi"
-          className="max-w-16"
-        />
-      ),
+      render: (_, record) =>
+        record?.imageUrl ? (
+          <img
+            src={`${import.meta.env.VITE_SERVER_PORT}${record?.imageUrl}`}
+            alt="Obyekt rasmi"
+            className="max-w-16"
+          />
+        ) : 'Obyekt rasmi mavjud emas',
     },
     { title: "Nomi", dataIndex: "name" },
     {

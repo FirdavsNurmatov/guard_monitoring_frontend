@@ -161,6 +161,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       // 3️⃣ Object update
       await instance.patch(`/superadmin/object/${fullObject.id}`, {
         name: objectName,
+        position: objectPosition,
         zoom,
       });
 
@@ -189,7 +190,6 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       }
 
       toast.success("✅ Obyekt yangilandi");
-      fetchObjects();
       onClose();
     } catch (err) {
       const data = err?.response?.data;
