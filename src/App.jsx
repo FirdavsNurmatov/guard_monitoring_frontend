@@ -50,16 +50,6 @@ function App() {
       </Route>
       <Route path="admin" element={<MainLayout />}>
         <Route index element={<Navigate to="users" replace />} />
-        {/*
-        <Route
-          key={2}
-          path="object"
-          element={
-            <RoleChecker roles={["ADMIN"]}>
-              <Objects />
-            </RoleChecker>
-          }
-        /> */}
         <Route
           key={3}
           path="users"

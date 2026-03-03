@@ -23,6 +23,7 @@ const Users = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [form] = Form.useForm();
+  const [selectedRole, setSelectedRole] = useState(null);
 
   useEffect(() => {
     const getUsers = async () => {
@@ -129,6 +130,7 @@ const Users = () => {
               setSelected(record);
               setFormMode("edit");
               form.setFieldsValue(record);
+              setSelectedRole(record.role);
               setIsFormModalOpen(true);
             }}
           >
@@ -165,6 +167,7 @@ const Users = () => {
           onClick={() => {
             setFormMode("create");
             setSelected(null);
+            setSelectedRole(null);
             form.resetFields();
             setIsFormModalOpen(true);
           }}
@@ -230,6 +233,9 @@ const Users = () => {
             formMode === "create" ? handleCreate(values) : handleEdit(values)
           }
         >
+          <Form.Item label="Foydalanuvchi nomi" name="username">
+            <Input />
+          </Form.Item>
           <Form.Item
             label="Login"
             name="login"
@@ -237,17 +243,43 @@ const Users = () => {
           >
             <Input />
           </Form.Item>
-          <Form.Item label="Foydalanuvchi nomi" name="username">
-            <Input />
-          </Form.Item>
           {formMode == "create" ? (
             <>
               <Form.Item
                 label="Parol"
                 name="password"
-                rules={[{ required: true, message: "Parolni kiriting" }]}
+                rules={[
+                  { required: true, message: "Parolni kiriting" },
+                  {
+                    validator: (_, value) => {
+                      if (
+                        selectedRole === "GUARD" &&
+                        (!value || value.length !== 6)
+                      ) {
+                        return Promise.reject(
+                          "Qo'riqchi roli uchun 6 ta raqamdan iborat parol kiriting",
+                        );
+                      }
+                      if (
+                        selectedRole === "GUARD" &&
+                        value &&
+                        !/^\d{6}$/.test(value)
+                      ) {
+                        return Promise.reject(
+                          "Parol faqat 6 ta raqamdan iborat bo'lishi kerak",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
-                <Input.Password />
+                <Input.Password
+                  maxLength={selectedRole === "GUARD" ? 6 : undefined}
+                  placeholder={
+                    selectedRole === "GUARD" ? "6 ta raqam" : "Parol"
+                  }
+                />
               </Form.Item>
               <Form.Item
                 label="Roli"
@@ -260,6 +292,12 @@ const Users = () => {
                     { label: "Qo‘riqchi", value: "GUARD" },
                     { label: "Operator", value: "OPERATOR" },
                   ]}
+                  onChange={(value) => {
+                    setSelectedRole(value);
+                    if (value !== "GUARD") {
+                      form.setFieldsValue({ password: "" });
+                    }
+                  }}
                 />
               </Form.Item>
             </>
@@ -268,9 +306,41 @@ const Users = () => {
               <Form.Item
                 label="Yangi parol"
                 name="password"
-                rules={[{ required: false }]}
+                rules={[
+                  { required: false },
+                  {
+                    validator: (_, value) => {
+                      if (
+                        value &&
+                        selected?.role === "GUARD" &&
+                        value.length !== 6
+                      ) {
+                        return Promise.reject(
+                          "Qo'riqchi roli uchun 6 ta raqamdan iborat parol kiriting",
+                        );
+                      }
+                      if (
+                        value &&
+                        selected?.role === "GUARD" &&
+                        !/^\d{6}$/.test(value)
+                      ) {
+                        return Promise.reject(
+                          "Parol faqat 6 ta raqamdan iborat bo'lishi kerak",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
-                <Input.Password placeholder="Agar o‘zgartirmoqchi bo‘lmasangiz, bo‘sh qoldiring" />
+                <Input.Password
+                  maxLength={selected?.role === "GUARD" ? 6 : undefined}
+                  placeholder={
+                    selected?.role === "GUARD"
+                      ? "6 ta raqam"
+                      : "Agar o'zgartirmoqchi bo'lsangiz, bu yerga kiriting"
+                  }
+                />
               </Form.Item>
               <Form.Item
                 label="Holati"

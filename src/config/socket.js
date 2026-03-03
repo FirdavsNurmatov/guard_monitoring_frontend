@@ -6,7 +6,7 @@ const token = data?.state?.token;
 export const socket = io(import.meta.env.VITE_SOCKET_IO, {
   transports: ["websocket"],
   auth: {
-    token, // 🔥 MUHIM
+    token,
   },
 });
 
