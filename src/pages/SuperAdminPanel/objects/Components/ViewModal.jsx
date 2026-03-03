@@ -17,6 +17,7 @@ const viewColumns = [
 const ViewModal = ({ open, onClose, objectData }) => {
   const [objectType, setObjectType] = useState("IMAGE");
   const [fullObject, setFullObject] = useState(null); // ✅ backend’dan keladigan full object
+  const [checkpoints, setCheckpoints] = useState([]);
 
   useEffect(() => {
     if (!objectData?.id) return;
@@ -26,7 +27,8 @@ const ViewModal = ({ open, onClose, objectData }) => {
         const { data } = await instance.get(
           `/superadmin/object/${objectData.id}`,
         );
-        setFullObject(data); // ✅ checkpoints shu yerda keladi
+        setFullObject(data);
+        setCheckpoints(data?.checkpoints || []);
       } catch (err) {
         // console.error("Failed to fetch object:", err);
       }
@@ -35,15 +37,13 @@ const ViewModal = ({ open, onClose, objectData }) => {
     getOneObject();
   }, [objectData?.id]);
 
-  const checkpoints = fullObject?.checkpoints || [];
-
   return (
     <Modal
       open={open}
       onCancel={onClose}
       footer={null}
       width={1400}
-      title={`View Object: ${objectData?.name}`}
+      title={`View Object: ${fullObject?.name || objectData?.name}`}
       style={{ top: 10 }}
     >
       <div className="mt-2 mb-2 flex gap-3">
@@ -57,26 +57,33 @@ const ViewModal = ({ open, onClose, objectData }) => {
 
       {objectType === "IMAGE" && (
         <div className="relative inline-block border rounded-xl shadow-md">
-          <img
-            src={`${import.meta.env.VITE_SERVER_PORT}${objectData?.imageUrl}`}
-            alt="map"
-            className="w-full max-h-[80vh] object-contain rounded-xl"
-          />
-          {checkpoints.map((point, index) => (
-            <div
-              key={point.id || index}
-              className="absolute flex"
-              style={{
-                top: `${point?.position?.yPercent ?? 5}%`,
-                left: `${point?.position?.xPercent ?? 10}%`,
-              }}
-            >
-              <div className="w-4 h-4 z-10 bg-blue-500 rounded-full border-2 border-white shadow" />
-              <span className="mt-1 text-xs bg-white px-1 rounded shadow">
-                {point.name || `${index + 1}-punkt`}
-              </span>
+          {fullObject?.imageUrl ? (
+            <img
+              src={`${import.meta.env.VITE_SERVER_PORT}${fullObject?.imageUrl}`}
+              alt="map"
+              className="w-full max-h-[80vh] object-contain rounded-xl"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center m-2 justify-center">
+              <span className="text-gray-500">Obyekt rasmi mavjud emas</span>
             </div>
-          ))}
+          )}
+          {fullObject?.imageUrl &&
+            checkpoints.map((point, index) => (
+              <div
+                key={point.id || index}
+                className="absolute flex"
+                style={{
+                  top: `${point?.position?.yPercent ?? 5}%`,
+                  left: `${point?.position?.xPercent ?? 10}%`,
+                }}
+              >
+                <div className="w-4 h-4 z-10 bg-blue-500 rounded-full border-2 border-white shadow" />
+                <span className="mt-1 text-xs bg-white px-1 rounded shadow">
+                  {point.name || `${index + 1}-punkt`}
+                </span>
+              </div>
+            ))}
         </div>
       )}
 
@@ -92,6 +99,7 @@ const ViewModal = ({ open, onClose, objectData }) => {
 
       {checkpoints.length > 0 && (
         <Table
+          className="mt-4"
           rowKey={(record) => record.id || record.name}
           columns={viewColumns}
           dataSource={checkpoints}

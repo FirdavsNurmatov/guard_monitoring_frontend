@@ -244,8 +244,8 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
             icon={objectIcon}
             ref={objectMarkerRef}
             eventHandlers={{
-              dragend() {
-                const { lat, lng } = objectMarkerRef.current.getLatLng();
+              dragend(e) {
+                const { lat, lng } = e.target.getLatLng();
                 setObjectPosition({ lat, lng });
               },
             }}
@@ -259,6 +259,13 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
                 key={i}
                 position={[cp.location.lat, cp.location.lng]}
                 icon={checkpointIcon}
+                draggable
+                eventHandlers={{
+                  dragend(e) {
+                    const { lat, lng } = e.target.getLatLng();
+                    handleChangeCheckpoint(i, "location", { lat, lng });
+                  },
+                }}
               >
                 <Tooltip
                   direction="top"

@@ -161,6 +161,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       // 3️⃣ Object update
       await instance.patch(`/superadmin/object/${fullObject.id}`, {
         name: objectName,
+        position: objectPosition,
         zoom,
       });
 
@@ -189,7 +190,6 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       }
 
       toast.success("✅ Obyekt yangilandi");
-      fetchObjects();
       onClose();
     } catch (err) {
       const data = err?.response?.data;
@@ -207,8 +207,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
     }
   };
 
-  console.log(cardNumberErrors);
-
+  
   return (
     <Modal
       title={`Obyektni tahrirlash: ${objectName}`}
@@ -321,18 +320,28 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
             setZoom={setZoom}
             mapType={mapType}
             onObjectMove={(newPos) => setObjectPosition(newPos)} // 🆕 Obyektni surish funksiyasi
-            onAddCheckpoint={(lat, lng) => {
-              setCheckpoints((prev) => [
-                ...prev,
-                {
-                  name: "",
-                  normalTime: 15,
-                  passTime: 2,
-                  cardNumber: "",
-                  location: { lat, lng },
-                },
-              ]);
-              toast.success("🟢 Yangi punkt qo‘shildi");
+            onAddCheckpoint={(lat, lng, index) => {
+              if (index !== undefined) {
+                // Checkpoint pozitsiyasini yangilash
+                setCheckpoints((prev) => {
+                  const next = [...prev];
+                  next[index] = { ...next[index], location: { lat, lng } };
+                  return next;
+                });
+              } else {
+                // Yangi checkpoint qo'shish
+                setCheckpoints((prev) => [
+                  ...prev,
+                  {
+                    name: "",
+                    normalTime: 15,
+                    passTime: 2,
+                    cardNumber: "",
+                    location: { lat, lng },
+                  },
+                ]);
+                toast.success("🟢 Yangi punkt qo‘shildi");
+              }
             }}
           />
         </>
@@ -406,29 +415,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                 addonAfter="Y%"
                 style={{ width: "120px" }}
               />
-              <InputNumber
-                placeholder="Lat"
-                value={cp?.location?.lat}
-                onChange={(val) =>
-                  handleChangeCheckpoint(i, "location", {
-                    ...cp.location,
-                    lat: val,
-                  })
-                }
-                addonAfter="Lat"
-              />
-              <InputNumber
-                placeholder="Lng"
-                value={cp?.location?.lng}
-                onChange={(val) =>
-                  handleChangeCheckpoint(i, "location", {
-                    ...cp.location,
-                    lng: val,
-                  })
-                }
-                addonAfter="Lng"
-              />
-
+              
               <Button
                 danger
                 onClick={() => {

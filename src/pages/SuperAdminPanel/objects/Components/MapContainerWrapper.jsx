@@ -58,10 +58,9 @@ const MapContainerWrapper = ({
   }, [zoom]);
 
   const markerEventHandlers = {
-    dragend() {
-      const marker = markerRef.current;
-      if (marker && onObjectMove) {
-        const { lat, lng } = marker.getLatLng();
+    dragend(e) {
+      if (onObjectMove) {
+        const { lat, lng } = e.target.getLatLng();
         onObjectMove({ lat, lng });
       }
     },
@@ -101,6 +100,15 @@ const MapContainerWrapper = ({
                 key={i}
                 position={[cp.location.lat, cp.location.lng]}
                 icon={checkpointIcon}
+                draggable={!!onAddCheckpoint}
+                eventHandlers={{
+                  dragend(e) {
+                    if (onAddCheckpoint) {
+                      const { lat, lng } = e.target.getLatLng();
+                      onAddCheckpoint(lat, lng, i);
+                    }
+                  },
+                }}
               >
                 <Tooltip permanent direction="top">
                   {cp.name || `${i + 1}-punkt`}

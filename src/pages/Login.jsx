@@ -41,13 +41,15 @@ export default function Login() {
         return navigate("/superadmin", { replace: true });
       return navigate("/monitoring", { replace: true });
     } catch (error) {
-      // console.log(error);
+      // console.log(error?.response?.data?.message);
 
-      if (!error.message.startsWith("Access Denied"))
-        setApiError("Username yoki parol noto'g'ri! Qayta urinib ko'ring!");
-      else if (!error.message.includes("not found")) {
-        setApiError("Bunday user mavjud emas");
-      } else setApiError(error.message);
+      if (error?.response?.data?.message.includes("incorrect")) {
+        setApiError("Login yoki password noto'g'ri");
+      } else if (error?.response?.data?.message.includes("found")) {
+        setApiError("Bunday foydalanuvchi mavjud emas");
+      } else if (error?.response?.data?.message.includes("inactive")) {
+        setApiError("Organizatsiya aktiv emas");
+      } else setApiError(error?.response?.data?.message);
     } finally {
       setLoading(false);
     }

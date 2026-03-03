@@ -2,7 +2,6 @@ import { Button, Layout, Menu, Modal, theme } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  DashboardOutlined,
   PictureOutlined,
   UsergroupAddOutlined,
   LogoutOutlined,
