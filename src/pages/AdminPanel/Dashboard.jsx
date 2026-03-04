@@ -14,14 +14,6 @@ import "leaflet/dist/leaflet.css";
 import { CheckpointMarker } from "../../components/CheckpointMarker";
 import { useMemo } from "react";
 
-// default icon to fix missing marker
-// delete L.Icon.Default.prototype._getIconUrl;
-// L.Icon.Default.mergeOptions({
-//   iconRetinaUrl:
-//     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-//   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-//   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-// });
 const invisibleIcon = L.divIcon({
   className: "",
   html: `<div style="width:0;height:0;"></div>`,
@@ -187,17 +179,10 @@ export default function Dashboard() {
     }
   }, [maps]); // 🟢 faqat maps yangilansa, lekin fetch ichida emas
 
-  // useEffect(() => {
-  //   const timer = setInterval(() => setNow(new Date()), 1000);
-  //   return () => clearInterval(timer);
-  // }, []);
-
   useEffect(() => {
     audioRef.current = new Audio("/sound-example.wav");
     audioRef.current.preload = "auto";
   }, []);
-
-  // const [audioEnabled, setAudioEnabled] = useState(false);
 
   useEffect(() => {
     const unlockAudio = () => {
@@ -221,7 +206,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     const handleLog = (log) => {
-      // console.log(log?.checkpoint?.objectId, selectedMap?.id);
       if (log?.checkpoint?.objectId !== selectedMap?.id) return;
 
       const formattedLog = {
@@ -236,12 +220,6 @@ export default function Dashboard() {
         xPercent: log.checkpoint?.xPercent,
         yPercent: log.checkpoint?.yPercent,
       };
-
-      // 🔊 audio va noty xabarnoma
-      // const audio = new Audio("/sound-example.wav");
-      // audio.play().catch((err) => {
-      //   console.log(err);
-      // });
 
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch((err) => {
@@ -259,7 +237,7 @@ export default function Dashboard() {
         layout: "topRight",
         timeout: 4000,
       }).show();
-      
+
       // 🧩 logs update
       setLogs((prev) => [formattedLog, ...prev].slice(0, 50));
 
@@ -423,6 +401,60 @@ export default function Dashboard() {
     return map;
   }, [logs]);
 
+  const getSmartPositionForImage = (cp, checkpoints) => {
+    const threshold = 8; // % masofa (yaqin deb hisoblash uchun)
+
+    const closeOnTop = checkpoints.some(
+      (c) =>
+        c.id !== cp.id &&
+        Math.abs(c.position?.xPercent - cp.position?.xPercent) < threshold &&
+        c.position?.yPercent < cp.position?.yPercent &&
+        cp.position?.yPercent - c.position?.yPercent < threshold,
+    );
+
+    const closeOnBottom = checkpoints.some(
+      (c) =>
+        c.id !== cp.id &&
+        Math.abs(c.position?.xPercent - cp.position?.xPercent) < threshold &&
+        c.position?.yPercent > cp.position?.yPercent &&
+        c.position?.yPercent - cp.position?.yPercent < threshold,
+    );
+
+    if (closeOnTop) return "bottom";
+    if (closeOnBottom) return "top";
+
+    return "top";
+  };
+
+  const getSmartDirectionForMap = (cp, checkpoints) => {
+    const threshold = 0.001; // yaqinlik (map scale ga qarab sozlanadi)
+
+    const closeOnTop = checkpoints.some(
+      (c) =>
+        c.id !== cp.id &&
+        Math.abs(c.location?.lng - cp.location?.lng) < threshold &&
+        c.location?.lat > cp.location?.lat &&
+        c.location?.lat - cp.location?.lat < threshold,
+    );
+
+    if (closeOnTop) {
+      if (
+        selectedMap?.position?.lng > cp.location?.lng &&
+        selectedMap?.position?.lat > cp.location?.lat
+      ) {
+        return "bottom";
+      } else if (selectedMap?.position?.lng > cp.location?.lng) {
+        return "left";
+      } else if (selectedMap?.position?.lat > cp.location?.lat) {
+        return "bottom";
+      } else {
+        return "right";
+      }
+    }
+
+    return "top";
+  };
+
   return (
     <div className="h-screen w-screen overflow-hidden">
       <div className="mb-1 flex items-center justify-between px-10 py-4 bg-white border-b shadow-sm">
@@ -430,21 +462,12 @@ export default function Dashboard() {
           <Title level={3} className="!mb-0">
             {selectedMap ? selectedMap.name : "Obyekt tanlanmagan"}
           </Title>
-          {/* <span className="text-black">
-            {now.toLocaleTimeString("uz-UZ", {
-              year: "numeric",
-              month: "numeric",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span> */}
+
           <div className="flex gap-2">
             <Button
               color="purple"
               variant={objectType === "IMAGE" ? "outlined" : "solid"}
               onClick={() => {
-                // handleSelectMap(selectedMap?.id);
                 setObjectType("IMAGE");
               }}
             >
@@ -454,7 +477,6 @@ export default function Dashboard() {
               color="cyan"
               variant={objectType === "MAP" ? "outlined" : "solid"}
               onClick={() => {
-                // handleSelectMap(selectedMap.id);
                 setObjectType("MAP");
               }}
             >
@@ -469,7 +491,6 @@ export default function Dashboard() {
                 setSelectedMap(map);
                 handleSelectMap(map.id);
               }}
-              // showSearch
               optionFilterProp="children"
             >
               {maps.map((item) => (
@@ -525,58 +546,19 @@ export default function Dashboard() {
                   />
 
                   {selectedMap.checkpoints?.map((cp) => {
-                    // const latestLog = [...logs]
-                    //   .filter((l) => l.zoneId === cp.id)
-                    //   .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
                     const latestLog = latestLogsByZone[cp.id];
 
-                    // const statusColors = {
-                    //   ON_TIME: "bg-green-500",
-                    //   LATE: "bg-yellow-500",
-                    //   MISSED: "bg-red-500",
-                    // };
-                    // const statusColor = latestLog
-                    //   ? statusColors[latestLog.status] || "bg-gray-400"
-                    //   : "bg-gray-400";
-
-                    // let timeDiff = null;
-                    // if (latestLog) {
-                    //   const now = Date.now();
-                    //   const diffSec = Math.floor(
-                    //     (now - latestLog.createdAtRaw) / 1000,
-                    //   );
-
-                    //   let totalTime = (cp.passTime + cp.normalTime) * 60;
-
-                    //   const remain = Math.max(totalTime - diffSec, 0);
-
-                    //   if (remain > 0) {
-                    //     const hours = Math.floor(remain / 3600);
-                    //     const minutes = Math.floor((remain % 3600) / 60);
-                    //     const seconds = remain % 60;
-
-                    //     // faqat soat bo‘lsa ko‘rsatamiz
-                    //     if (hours > 0) {
-                    //       timeDiff = `${String(hours).padStart(
-                    //         2,
-                    //         "0",
-                    //       )}:${String(minutes).padStart(2, "0")}:${String(
-                    //         seconds,
-                    //       ).padStart(2, "0")}`;
-                    //     } else {
-                    //       timeDiff = `${String(minutes).padStart(
-                    //         2,
-                    //         "0",
-                    //       )}:${String(seconds).padStart(2, "0")}`;
-                    //     }
-                    //   }
-                    // }
+                    const direction = getSmartPositionForImage(
+                      cp,
+                      selectedMap.checkpoints,
+                    );
 
                     return (
                       <CheckpointMarker
                         key={cp.id}
                         cp={cp}
                         latestLog={latestLog}
+                        direction={direction}
                         style={{
                           top: `${cp.position?.yPercent || 0}%`,
                           left: `${cp.position?.xPercent || 0}%`,
@@ -631,52 +613,12 @@ export default function Dashboard() {
                       {selectedMap.checkpoints?.map((cp) => {
                         if (!cp.location?.lat || !cp.location?.lng) return null;
 
-                        // const latestLog = [...logs]
-                        //   .filter((l) => l.zoneId === cp.id)
-                        //   .sort((a, b) => b.createdAtRaw - a.createdAtRaw)[0];
                         const latestLog = latestLogsByZone[cp.id];
 
-                        // const statusColors = {
-                        //   ON_TIME: "green",
-                        //   LATE: "yellow",
-                        //   MISSED: "red",
-                        // };
-                        // const color = latestLog
-                        //   ? statusColors[latestLog.status]
-                        //   : "gray";
-
-                        // let timeDiff = null;
-                        // if (latestLog) {
-                        //   const now = Date.now();
-                        //   const diffSec = Math.floor(
-                        //     (now - latestLog.createdAtRaw) / 1000,
-                        //   );
-
-                        //   let totalTime = (cp.normalTime + cp.passTime) * 60;
-
-                        //   const remain = Math.max(totalTime - diffSec, 0);
-
-                        //   if (remain > 0) {
-                        //     const hours = Math.floor(remain / 3600);
-                        //     const minutes = Math.floor((remain % 3600) / 60);
-                        //     const seconds = remain % 60;
-
-                        //     // faqat soat bo‘lsa ko‘rsatamiz
-                        //     if (hours > 0) {
-                        //       timeDiff = `${String(hours).padStart(
-                        //         2,
-                        //         "0",
-                        //       )}:${String(minutes).padStart(2, "0")}:${String(
-                        //         seconds,
-                        //       ).padStart(2, "0")}`;
-                        //     } else {
-                        //       timeDiff = `${String(minutes).padStart(
-                        //         2,
-                        //         "0",
-                        //       )}:${String(seconds).padStart(2, "0")}`;
-                        //     }
-                        //   }
-                        // }
+                        const direction = getSmartDirectionForMap(
+                          cp,
+                          selectedMap.checkpoints,
+                        );
 
                         return (
                           <React.Fragment key={cp.id}>
@@ -689,35 +631,37 @@ export default function Dashboard() {
                                 key={cp.id}
                                 cp={cp}
                                 latestLog={latestLog}
+                                direction={direction}
                                 objectType="MAP"
                               />
                             </Marker>
-                            {gpsPoints.length > 0 && (
-                              <>
-                                <Polyline
-                                  positions={gpsPoints}
-                                  color="blue"
-                                  weight={4}
-                                />
-                                {/* 🔹 So‘nggi nuqtada kichik yashil doira */}
-                                <Marker
-                                  position={gpsPoints[gpsPoints.length - 1]}
-                                  icon={L.divIcon({
-                                    className: "",
-                                    html: `<div style="
-                                    width:10px;
-                                    height:10px;
-                                    background-color:green;
-                                    border:2px solid black;
-                                    border-radius:50%;
-                                    "></div>`,
-                                  })}
-                                />
-                              </>
-                            )}
                           </React.Fragment>
                         );
                       })}
+
+                      {gpsPoints.length > 0 && (
+                        <>
+                          <Polyline
+                            positions={gpsPoints}
+                            color="blue"
+                            weight={4}
+                          />
+                          {/* 🔹 So‘nggi nuqtada kichik yashil doira */}
+                          <Marker
+                            position={gpsPoints[gpsPoints.length - 1]}
+                            icon={L.divIcon({
+                              className: "",
+                              html: `<div style="
+                                width:10px;
+                                height:10px;
+                                background-color:green;
+                                border:2px solid black;
+                                border-radius:50%;
+                              "></div>`,
+                            })}
+                          />
+                        </>
+                      )}
                     </MapContainer>
                   </>
                 )

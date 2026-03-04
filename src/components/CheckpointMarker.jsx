@@ -4,6 +4,7 @@ import { Tooltip } from "react-leaflet";
 export const CheckpointMarker = React.memo(function CheckpointMarker({
   cp,
   latestLog,
+  direction = "top",
   objectType = "IMAGE",
   style,
 }) {
@@ -54,15 +55,26 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
 
   const color = latestLog ? statusColors[latestLog.status] : "bg-gray-400";
 
+  const positionClass =
+    direction === "top"
+      ? "bottom-5 left-1/2 -translate-x-1/2"
+      : "top-5 left-1/2 -translate-x-1/2";
+
   return (
     <>
       {objectType === "MAP" ? (
-        <Tooltip offset={[0, 5]} direction="top" permanent>
+        <Tooltip direction={direction} permanent>
           <div className="text-sm text-center flex flex-col items-center">
             <div className="relative">
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white rounded-md px-2 py-1 whitespace-nowrap z-50">
+              <div
+                className={`absolute bg-white rounded-md px-2 py-1 whitespace-nowrap z-50
+                ${direction === "top" ? "bottom-4 left-1/2 -translate-x-1/2" : ""}
+                ${direction === "bottom" ? "top-4 left-1/2 -translate-x-1/2" : ""}
+                ${direction === "left" ? "top-1/2 right-5 -translate-y-1/2" : ""}
+                ${direction === "right" ? "top-1/2 left-5 -translate-y-1/2" : ""}
+              `}
+              >
                 <p>{cp.name}</p>
-
                 {latestLog && (
                   <>
                     <span>
@@ -76,7 +88,6 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
                     <b className="block">{latestLog.guard}</b>
                   </>
                 )}
-
                 {timeDiff && (
                   <div className="text-blue-600 font-semibold">{timeDiff}</div>
                 )}
@@ -96,9 +107,10 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
               className={`w-4 h-4 rounded-full ${color} border-2 border-white`}
             />
 
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white rounded-md shadow px-2 py-1 whitespace-nowrap z-50">
+            <div
+              className={`absolute ${positionClass} bg-white rounded-md shadow px-2 py-1 whitespace-nowrap z-50`}
+            >
               <p>{cp.name}</p>
-
               {latestLog && (
                 <>
                   <span>
@@ -112,7 +124,6 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
                   <b className="block">{latestLog.guard}</b>
                 </>
               )}
-
               {timeDiff && (
                 <div className="text-blue-600 font-semibold">{timeDiff}</div>
               )}
