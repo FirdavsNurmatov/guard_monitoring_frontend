@@ -401,60 +401,6 @@ export default function Dashboard() {
     return map;
   }, [logs]);
 
-  const getSmartPositionForImage = (cp, checkpoints) => {
-    const threshold = 8; // % masofa (yaqin deb hisoblash uchun)
-
-    const closeOnTop = checkpoints.some(
-      (c) =>
-        c.id !== cp.id &&
-        Math.abs(c.position?.xPercent - cp.position?.xPercent) < threshold &&
-        c.position?.yPercent < cp.position?.yPercent &&
-        cp.position?.yPercent - c.position?.yPercent < threshold,
-    );
-
-    const closeOnBottom = checkpoints.some(
-      (c) =>
-        c.id !== cp.id &&
-        Math.abs(c.position?.xPercent - cp.position?.xPercent) < threshold &&
-        c.position?.yPercent > cp.position?.yPercent &&
-        c.position?.yPercent - cp.position?.yPercent < threshold,
-    );
-
-    if (closeOnTop) return "bottom";
-    if (closeOnBottom) return "top";
-
-    return "top";
-  };
-
-  const getSmartDirectionForMap = (cp, checkpoints) => {
-    const threshold = 0.001; // yaqinlik (map scale ga qarab sozlanadi)
-
-    const closeOnTop = checkpoints.some(
-      (c) =>
-        c.id !== cp.id &&
-        Math.abs(c.location?.lng - cp.location?.lng) < threshold &&
-        c.location?.lat > cp.location?.lat &&
-        c.location?.lat - cp.location?.lat < threshold,
-    );
-
-    if (closeOnTop) {
-      if (
-        selectedMap?.position?.lng > cp.location?.lng &&
-        selectedMap?.position?.lat > cp.location?.lat
-      ) {
-        return "bottom";
-      } else if (selectedMap?.position?.lng > cp.location?.lng) {
-        return "left";
-      } else if (selectedMap?.position?.lat > cp.location?.lat) {
-        return "bottom";
-      } else {
-        return "right";
-      }
-    }
-
-    return "top";
-  };
-
   return (
     <div className="h-screen w-screen overflow-hidden">
       <div className="mb-1 flex items-center justify-between px-10 py-4 bg-white border-b shadow-sm">
@@ -548,17 +494,12 @@ export default function Dashboard() {
                   {selectedMap.checkpoints?.map((cp) => {
                     const latestLog = latestLogsByZone[cp.id];
 
-                    const direction = getSmartPositionForImage(
-                      cp,
-                      selectedMap.checkpoints,
-                    );
-
                     return (
                       <CheckpointMarker
                         key={cp.id}
                         cp={cp}
                         latestLog={latestLog}
-                        direction={direction}
+                        direction={cp?.infoStyle}
                         style={{
                           top: `${cp.position?.yPercent || 0}%`,
                           left: `${cp.position?.xPercent || 0}%`,
@@ -615,11 +556,6 @@ export default function Dashboard() {
 
                         const latestLog = latestLogsByZone[cp.id];
 
-                        const direction = getSmartDirectionForMap(
-                          cp,
-                          selectedMap.checkpoints,
-                        );
-
                         return (
                           <React.Fragment key={cp.id}>
                             <Marker
@@ -631,7 +567,7 @@ export default function Dashboard() {
                                 key={cp.id}
                                 cp={cp}
                                 latestLog={latestLog}
-                                direction={direction}
+                                direction={cp?.infoStyle}
                                 objectType="MAP"
                               />
                             </Marker>

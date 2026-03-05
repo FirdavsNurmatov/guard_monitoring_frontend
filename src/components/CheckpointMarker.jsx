@@ -4,7 +4,7 @@ import { Tooltip } from "react-leaflet";
 export const CheckpointMarker = React.memo(function CheckpointMarker({
   cp,
   latestLog,
-  direction = "top",
+  direction = "TOP",
   objectType = "IMAGE",
   style,
 }) {
@@ -56,22 +56,28 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
   const color = latestLog ? statusColors[latestLog.status] : "bg-gray-400";
 
   const positionClass =
-    direction === "top"
+    direction === "TOP"
       ? "bottom-5 left-1/2 -translate-x-1/2"
-      : "top-5 left-1/2 -translate-x-1/2";
+      : direction === "BOTTOM"
+        ? "top-5 left-1/2 -translate-x-1/2"
+        : direction === "LEFT"
+          ? "top-1/2 right-5 -translate-y-1/2"
+          : direction === "RIGHT"
+            ? "top-1/2 left-5 -translate-y-1/2"
+            : "bottom-5 left-1/2 -translate-x-1/2";
 
   return (
     <>
       {objectType === "MAP" ? (
-        <Tooltip direction={direction} permanent>
+        <Tooltip direction={direction.toLowerCase()} permanent>
           <div className="text-sm text-center flex flex-col items-center">
             <div className="relative">
               <div
                 className={`absolute bg-white rounded-md px-2 py-1 whitespace-nowrap z-50
-                ${direction === "top" ? "bottom-4 left-1/2 -translate-x-1/2" : ""}
-                ${direction === "bottom" ? "top-4 left-1/2 -translate-x-1/2" : ""}
-                ${direction === "left" ? "top-1/2 right-5 -translate-y-1/2" : ""}
-                ${direction === "right" ? "top-1/2 left-5 -translate-y-1/2" : ""}
+                ${direction === "TOP" ? "bottom-4 left-1/2 -translate-x-1/2" : ""}
+                ${direction === "BOTTOM" ? "top-4 left-1/2 -translate-x-1/2" : ""}
+                ${direction === "LEFT" ? "top-1/2 right-5 -translate-y-1/2" : ""}
+                ${direction === "RIGHT" ? "top-1/2 left-5 -translate-y-1/2" : ""}
               `}
               >
                 <p>{cp.name}</p>

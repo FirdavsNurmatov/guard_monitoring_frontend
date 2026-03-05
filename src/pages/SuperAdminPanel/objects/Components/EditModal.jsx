@@ -207,7 +207,6 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
     }
   };
 
-  
   return (
     <Modal
       title={`Obyektni tahrirlash: ${objectName}`}
@@ -389,6 +388,17 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                 style={{ width: "25%" }}
               />
 
+              <Select
+                value={cp.infoStyle || "TOP"} // ✅ default enum qiymati
+                onChange={(val) => handleChangeCheckpoint(i, "infoStyle", val)}
+                style={{ width: 120 }}
+              >
+                <Option value="TOP">Yuqorida</Option>
+                <Option value="RIGHT">O'ngda</Option>
+                <Option value="BOTTOM">Pastda</Option>
+                <Option value="LEFT">Chapda</Option>
+              </Select>
+
               <InputNumber
                 min={0}
                 max={100}
@@ -415,7 +425,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                 addonAfter="Y%"
                 style={{ width: "120px" }}
               />
-              
+
               <Button
                 danger
                 onClick={() => {
