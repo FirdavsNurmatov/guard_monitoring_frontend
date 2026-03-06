@@ -76,8 +76,8 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
                 className={`absolute bg-white rounded-md px-2 py-1 whitespace-nowrap z-50
                 ${direction === "TOP" ? "bottom-4 left-1/2 -translate-x-1/2" : ""}
                 ${direction === "BOTTOM" ? "top-4 left-1/2 -translate-x-1/2" : ""}
-                ${direction === "LEFT" ? "top-1/2 right-5 -translate-y-1/2" : ""}
-                ${direction === "RIGHT" ? "top-1/2 left-5 -translate-y-1/2" : ""}
+                ${direction === "LEFT" ? "top-1/2 right-4 -translate-y-1/2" : ""}
+                ${direction === "RIGHT" ? "top-1/2 left-4 -translate-y-1/2" : ""}
               `}
               >
                 <p>{cp.name}</p>
@@ -99,13 +99,13 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
                 )}
               </div>
 
-              <div className={`w-4 h-4 rounded-full ${color}`} />
+              <div className={`w-3 h-3 rounded-full ${color}`} />
             </div>
           </div>
         </Tooltip>
       ) : (
         <div
-          className="text-sm text-center absolute flex flex-col items-center"
+          className="text-sm text-center absolute"
           style={style}
         >
           <div className="relative">
@@ -114,7 +114,7 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
             />
 
             <div
-              className={`absolute ${positionClass} bg-white rounded-md shadow px-2 py-1 whitespace-nowrap z-50`}
+              className={`absolute ${positionClass} bg-white rounded-md shadow px-1 py-1 whitespace-nowrap z-50`}
             >
               <p>{cp.name}</p>
               {latestLog && (

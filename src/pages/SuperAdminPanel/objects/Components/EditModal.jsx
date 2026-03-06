@@ -362,7 +362,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                 onChange={(e) =>
                   handleChangeCheckpoint(i, "name", e.target.value)
                 }
-                style={{ width: "25%" }}
+                style={{ width: "20%" }}
               />
               <InputNumber
                 min={1}
@@ -385,7 +385,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                   handleChangeCheckpoint(i, "cardNumber", e.target.value)
                 }
                 status={cardNumberErrors[cp.cardNumber] ? "error" : ""}
-                style={{ width: "25%" }}
+                style={{ width: "20%" }}
               />
 
               <Select

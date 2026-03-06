@@ -403,33 +403,32 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen w-screen overflow-hidden">
-      <div className="mb-1 flex items-center justify-between px-10 py-4 bg-white border-b shadow-sm">
-        <div className="flex gap-3 items-center">
-          <Title level={3} className="!mb-0">
+      <div className="mb-1 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 px-3 sm:px-5 py-2 bg-white border-b shadow-sm">
+        {/* LEFT */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <Title level={4} className="!mb-0 text-base sm:text-lg lg:text-xl">
             {selectedMap ? selectedMap.name : "Obyekt tanlanmagan"}
           </Title>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               color="purple"
               variant={objectType === "IMAGE" ? "outlined" : "solid"}
-              onClick={() => {
-                setObjectType("IMAGE");
-              }}
+              onClick={() => setObjectType("IMAGE")}
             >
-              Rasm ko'rinishida
+              Rasm
             </Button>
+
             <Button
               color="cyan"
               variant={objectType === "MAP" ? "outlined" : "solid"}
-              onClick={() => {
-                setObjectType("MAP");
-              }}
+              onClick={() => setObjectType("MAP")}
             >
-              Xarita ko'rinishida
+              Xarita
             </Button>
+
             <Select
-              style={{ width: "100%" }}
+              className="min-w-[140px] sm:min-w-[200px]"
               placeholder="Obyekt tanlang"
               value={selectedMap?.id}
               onChange={(id) => {
@@ -447,22 +446,29 @@ export default function Dashboard() {
             </Select>
           </div>
         </div>
-        <div className="flex gap-2 items-center">
-          {/* <Button
-            type={audioEnabled ? "primary" : "default"}
-            onClick={() => setAudioEnabled(true)}
-          >
-            🔔 Ovoz yoqish
-          </Button> */}
 
-          <Button type="primary" onClick={() => setJournal(true)}>
+        {/* RIGHT */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <Button
+            type="primary"
+            onClick={() => setJournal(true)}
+          >
             Jurnallar
           </Button>
-          <Button type="primary" onClick={() => setShowTables(true)}>
-            Batafsil ma'lumotlar
+
+          <Button
+            type="primary"
+            onClick={() => setShowTables(true)}
+          >
+            Batafsil
           </Button>
+
           {user?.role === "ADMIN" && (
-            <Button onClick={() => navigate("/admin")}>Admin Paneli</Button>
+            <Button
+              onClick={() => navigate("/admin")}
+            >
+              Admin panel
+            </Button>
           )}
         </div>
       </div>
@@ -480,7 +486,7 @@ export default function Dashboard() {
             <div
               ref={mapWrapperRef}
               className={`relative ${
-                isFullscreen ? "h-screen w-screen" : "h-11/12 w-11/12 m-auto"
+                isFullscreen ? "h-screen w-screen" : "h-94/100 w-99/100 m-auto"
               } border rounded-xl overflow-hidden`}
             >
               {objectType === "IMAGE" ? (
