@@ -227,7 +227,7 @@ export default function Dashboard() {
       });
 
       new Noty({
-        text: `<b>${formattedLog.guard}</b> - ${formattedLog.checkpoint}`,
+        text: `<b>${formattedLog.checkpoint}</b> - ${formattedLog.guard}`,
         type:
           formattedLog.status === "ON_TIME"
             ? "success"
@@ -449,26 +449,16 @@ export default function Dashboard() {
 
         {/* RIGHT */}
         <div className="flex flex-wrap gap-2 items-center">
-          <Button
-            type="primary"
-            onClick={() => setJournal(true)}
-          >
+          <Button type="primary" onClick={() => setJournal(true)}>
             Jurnallar
           </Button>
 
-          <Button
-            type="primary"
-            onClick={() => setShowTables(true)}
-          >
+          <Button type="primary" onClick={() => setShowTables(true)}>
             Batafsil
           </Button>
 
           {user?.role === "ADMIN" && (
-            <Button
-              onClick={() => navigate("/admin")}
-            >
-              Admin panel
-            </Button>
+            <Button onClick={() => navigate("/admin")}>Admin panel</Button>
           )}
         </div>
       </div>
