@@ -4,6 +4,7 @@ import { instance } from "../config/axios-instance";
 import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+// import GuardMonitoring from '../../public/GuardMonitoring.png'
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -155,7 +156,7 @@ export default function Login() {
       {/* IMAGE */}
       <div className="hidden lg:flex lg:w-3/5 relative">
         <img
-          src="/public/GuardMonitoring.png"
+          src="/GuardMonitoring.png"
           alt="Security guard monitoring"
           className="object-cover w-full h-full"
         />
