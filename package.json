@@ -16,6 +16,7 @@
     "axios-auth-refresh": "^3.3.6",
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
+    "lucide-react": "^1.7.0",
     "noty": "^3.1.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
