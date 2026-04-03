@@ -34,8 +34,7 @@ const guardMarkers = [
     lng: 69.2401,
     name: "Guard 1",
     status: "active",
-    image:
-      "/GuardMeasure.jpeg",
+    image: "/GuardMeasure.jpeg",
   },
   {
     id: 2,
@@ -43,8 +42,7 @@ const guardMarkers = [
     lng: 69.2272,
     name: "Guard 2",
     status: "active",
-    image:
-      "/GuardMeasure.jpeg",
+    image: "/GuardMeasure.jpeg",
   },
   {
     id: 3,
@@ -52,8 +50,7 @@ const guardMarkers = [
     lng: 69.2432,
     name: "Guard 3",
     status: "inactive",
-    image:
-      "/GuardMeasure.jpeg",
+    image: "/GuardMeasure.jpeg",
   },
   {
     id: 4,
@@ -61,8 +58,7 @@ const guardMarkers = [
     lng: 69.2359,
     name: "Guard 4",
     status: "active",
-    image:
-      "/GuardMeasure.jpeg",
+    image: "/GuardMeasure.jpeg",
   },
   {
     id: 5,
@@ -70,8 +66,7 @@ const guardMarkers = [
     lng: 69.25,
     name: "Guard 5",
     status: "active",
-    image:
-      "/GuardMeasure.jpeg",
+    image: "/GuardMeasure.jpeg",
   },
 ];
 
@@ -296,6 +291,7 @@ function App() {
                       zoom={14}
                       style={{ height: "100%", width: "100%" }}
                       className="rounded-xl"
+                      attributionControl={false}
                     >
                       <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
