@@ -1,18 +1,33 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Typography, Spin, Table, Button, Modal, Select } from "antd";
-import { instance } from "../../config/axios-instance";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/useAuthStore";
-import { socket } from "../../config/socket";
 import toast from "react-hot-toast";
+import { Typography, Table, Button, Modal, Select } from "antd";
+import { CheckpointMarker } from "../../components/CheckpointMarker";
+import { instance } from "../../config/axios-instance";
+import { socket } from "../../config/socket";
+import { useAuthStore } from "../../store/useAuthStore";
 import Noty from "noty";
 import "noty/lib/noty.css";
 import "noty/src/themes/metroui.scss";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { CheckpointMarker } from "../../components/CheckpointMarker";
-import { useMemo } from "react";
+import {
+  Shield,
+  Image,
+  Users,
+  FileText,
+  Map,
+  LayoutDashboard,
+} from "lucide-react";
+
+// Pulse animation for live indicator
+const LiveIndicator = () => (
+  <span className="relative flex h-3 w-3 mr-2">
+    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+  </span>
+);
 
 const invisibleIcon = L.divIcon({
   className: "",
@@ -184,25 +199,25 @@ export default function Dashboard() {
     audioRef.current.preload = "auto";
   }, []);
 
-  useEffect(() => {
-    const unlockAudio = () => {
-      if (audioRef.current) {
-        audioRef.current
-          .play()
-          .then(() => {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-          })
-          .catch(() => {});
-      }
-    };
+  // useEffect(() => {
+  //   const unlockAudio = () => {
+  //     if (audioRef.current) {
+  //       audioRef.current
+  //         .play()
+  //         .then(() => {
+  //           audioRef.current.pause();
+  //           audioRef.current.currentTime = 0;
+  //         })
+  //         .catch(() => {});
+  //     }
+  //   };
 
-    window.addEventListener("click", unlockAudio, { once: true });
+  //   window.addEventListener("click", unlockAudio, { once: true });
 
-    return () => {
-      window.removeEventListener("click", unlockAudio);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("click", unlockAudio);
+  //   };
+  // }, []);
 
   useEffect(() => {
     const handleLog = (log) => {
@@ -402,83 +417,126 @@ export default function Dashboard() {
   }, [logs]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <div className="mb-1 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 px-3 sm:px-5 py-2 bg-white border-b shadow-sm">
-        {/* LEFT */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-          <Title level={4} className="!mb-0 text-base sm:text-lg lg:text-xl">
-            {selectedMap ? selectedMap.name : "Obyekt tanlanmagan"}
-          </Title>
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      <header className="bg-white border-b border-gray-200 shadow-sm z-50 flex-shrink-0">
+        <div className="px-4 py-2">
+          <div>
+            <div className="flex items-center justify-between">
+              {/* Left */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <LayoutDashboard className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">
+                    {selectedMap?.name || "Monitoring"}
+                  </h1>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <LiveIndicator />
+                    <span>Live</span>
+                  </div>
+                </div>
+              </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              color="purple"
-              variant={objectType === "IMAGE" ? "outlined" : "solid"}
-              onClick={() => setObjectType("IMAGE")}
-            >
-              Rasm
-            </Button>
+              {/* Center */}
+              <div className="flex items-center gap-2">
+                <div className="flex bg-gray-100 rounded-lg p-0.5">
+                  <Button
+                    type={objectType === "IMAGE" ? "primary" : "text"}
+                    onClick={() => setObjectType("IMAGE")}
+                    size="medium"
+                    icon={<Image className="w-3.5 h-3.5" />}
+                  >
+                    Rasm
+                  </Button>
+                  <Button
+                    type={objectType === "MAP" ? "primary" : "text"}
+                    onClick={() => setObjectType("MAP")}
+                    size="medium"
+                    icon={<Map className="w-3.5 h-3.5" />}
+                  >
+                    Xarita
+                  </Button>
+                </div>
 
-            <Button
-              color="cyan"
-              variant={objectType === "MAP" ? "outlined" : "solid"}
-              onClick={() => setObjectType("MAP")}
-            >
-              Xarita
-            </Button>
+                <Select
+                  size="medium"
+                  className="w-40"
+                  placeholder="Obyekt"
+                  value={selectedMap?.id}
+                  onChange={(id) => {
+                    const map = maps.find((m) => m.id === id);
+                    setSelectedMap(map);
+                    handleSelectMap(map.id);
+                  }}
+                >
+                  {maps.map((item) => (
+                    <Option key={item.id} value={item.id}>
+                      {item.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
 
-            <Select
-              className="min-w-[140px] sm:min-w-[200px]"
-              placeholder="Obyekt tanlang"
-              value={selectedMap?.id}
-              onChange={(id) => {
-                const map = maps.find((m) => m.id === id);
-                setSelectedMap(map);
-                handleSelectMap(map.id);
-              }}
-              optionFilterProp="children"
-            >
-              {maps.map((item) => (
-                <Option key={item.id} value={item.id}>
-                  {item.name}
-                </Option>
-              ))}
-            </Select>
+              {/* Right */}
+              <div className="flex items-center gap-1">
+                <Button
+                  size="medium"
+                  type="primary"
+                  icon={<FileText className="w-3.5 h-3.5" />}
+                  onClick={() => setJournal(true)}
+                >
+                  Jurnal
+                </Button>
+                <Button
+                  size="medium"
+                  icon={<Users className="w-3.5 h-3.5" />}
+                  onClick={() => setShowTables(true)}
+                >
+                  Batafsil
+                </Button>
+                {user?.role === "ADMIN" && (
+                  <Button
+                    size="medium"
+                    icon={<Shield className="w-3.5 h-3.5" />}
+                    onClick={() => navigate("/admin")}
+                  >
+                    Admin
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Stats */}
+            {!loading && selectedMap && (
+              <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-100 text-xs">
+                <span className="text-gray-500">
+                  Qorovullar: <b className="text-gray-900">{guards.length}</b>
+                </span>
+                <span className="text-gray-500">
+                  Vaqtida:{" "}
+                  <b className="text-emerald-600">
+                    {logs.filter((l) => l.status === "ON_TIME").length}
+                  </b>
+                </span>
+                <span className="text-gray-500">
+                  Kechikish:{" "}
+                  <b className="text-amber-600">
+                    {
+                      logs.filter(
+                        (l) => l.status === "LATE" || l.status === "VERY_LATE",
+                      ).length
+                    }
+                  </b>
+                </span>
+                <span className="ml-auto text-gray-400">
+                  {logs[0]?.createdAt?.split(",")[1]?.trim() || "--:--"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* RIGHT */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <Button
-            type="primary"
-            onClick={() => setJournal(true)}
-          >
-            Jurnallar
-          </Button>
-
-          <Button
-            type="primary"
-            onClick={() => setShowTables(true)}
-          >
-            Batafsil
-          </Button>
-
-          {user?.role === "ADMIN" && (
-            <Button
-              onClick={() => navigate("/admin")}
-            >
-              Admin panel
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* LOADING / EMPTY */}
-      {loading && (
-        <div className="h-[80vh] flex items-center justify-center">
-          <Spin size="large" />
-        </div>
-      )}
+      </header>
 
       {!loading && selectedMap && (
         <>

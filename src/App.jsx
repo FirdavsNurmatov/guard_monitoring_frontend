@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/AdminPanel/Dashboard";
 import User from "./pages/AdminPanel/users/Users";
 import Organizations from "./pages/SuperAdminPanel/Organizations/Organizations";
@@ -12,7 +13,8 @@ import Users from "./pages/SuperAdminPanel/Users/Users";
 function App() {
   return (
     <Routes>
-      <Route index element={<Login />} />
+      <Route index element={<LandingPage />} />
+      <Route path="login" element={<Login />} />
       <Route
         path="monitoring"
         element={

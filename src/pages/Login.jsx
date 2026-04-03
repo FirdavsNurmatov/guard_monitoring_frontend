@@ -82,7 +82,7 @@ export default function Login() {
               <Shield className="w-8 h-8 text-white" />
             </div>
             <span className="text-2xl font-semibold text-gray-800">
-              Qorovul Monitoringi
+              Guard Monitoring
             </span>
           </div>
 
