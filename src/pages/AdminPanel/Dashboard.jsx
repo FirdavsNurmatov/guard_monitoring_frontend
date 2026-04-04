@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 import { Typography, Table, Button, Modal, Select } from "antd";
 import { CheckpointMarker } from "../../components/CheckpointMarker";
 import { instance } from "../../config/axios-instance";
-import { socket } from "../../config/socket";
+import { createSocket } from "../../config/socket";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useObjectStore } from "../../store/useObjectStore";
 import Noty from "noty";
 import "noty/lib/noty.css";
 import "noty/src/themes/metroui.scss";
@@ -39,6 +40,7 @@ const { Title } = Typography;
 const { Option } = Select;
 
 export default function Dashboard() {
+  const [socket, setSocket] = useState(null);
   const [maps, setMaps] = useState([]); // 🔹 barcha obyektlar
   const [selectedMap, setSelectedMap] = useState(null); // 🔹 tanlangan obyekt
   const [loading, setLoading] = useState(true);
@@ -50,14 +52,20 @@ export default function Dashboard() {
   const [total, setTotal] = useState(0);
   const [showTables, setShowTables] = useState(false);
   const [gpsPoints, setGpsPoints] = useState([]);
-  const [mapType, setMapType] = useState("y"); // 🗺️ default: hybrid
-  const [objectType, setObjectType] = useState("MAP");
   const mapWrapperRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const baseUrl = import.meta.env.VITE_SERVER_PORT;
   const navigate = useNavigate();
   const { user } = useAuthStore((store) => store);
+  const { 
+    selectedMapId, 
+    mapType, 
+    objectType, 
+    setSelectedMapId, 
+    setMapType, 
+    setObjectType 
+  } = useObjectStore((store) => store);
 
   const audioRef = useRef(null);
 
@@ -99,6 +107,7 @@ export default function Dashboard() {
 
   const handleSelectMap = async (id) => {
     setLoading(true);
+    setSelectedMapId(id); // Store ga saqlash
     try {
       const res = await instance.get(`/object/${id}`);
       setSelectedMap({
@@ -180,6 +189,26 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Socket ulanishini yaratish
+    const newSocket = createSocket();
+    setSocket(newSocket);
+
+    // Socket eventlari
+    newSocket.on("connect", () => {
+      console.log("✅ Connected", newSocket.id);
+    });
+
+    newSocket.on("connect_error", (err) => {
+      console.error("❌ Connection error:", err.message);
+    });
+
+    // Komponent unmounted bo'lganda socketni uzish
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     const init = async () => {
       await fetchAllMaps();
     };
@@ -188,11 +217,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (maps.length > 0 && !selectedMap) {
-      handleSelectMap(maps[0].id);
+      // Store dan saqlangan obyekt ID sini olish
+      const mapId = selectedMapId || maps[0].id;
+      handleSelectMap(mapId);
     } else if (maps.length > 0 && selectedMap) {
       handleSelectMap(selectedMap?.id);
     }
-  }, [maps]); // 🟢 faqat maps yangilansa, lekin fetch ichida emas
+  }, [maps, selectedMapId]); // 🟢 selectedMapId ni ham qo'shish
 
   useEffect(() => {
     audioRef.current = new Audio("/sound-example.wav");
@@ -220,6 +251,8 @@ export default function Dashboard() {
   // }, []);
 
   useEffect(() => {
+    if (!socket) return;
+
     const handleLog = (log) => {
       if (log?.checkpoint?.objectId !== selectedMap?.id) return;
 
@@ -287,10 +320,12 @@ export default function Dashboard() {
     return () => {
       socket.off("logs", handleLog);
     };
-  }, [selectedMap?.id]); // 🧩 faqat obyekt o‘zgarganda yangilanadi
+  }, [selectedMap?.id, socket]); // 🧩 faqat obyekt o‘zgarganda yangilanadi
 
   // 🛰️ GPS real-time yangilanishlar
   useEffect(() => {
+    if (!socket) return;
+
     const handleGps = async (msg) => {
       // Masalan: msg = "gps:3"
       if (!msg.startsWith("gps:")) return;
@@ -310,7 +345,7 @@ export default function Dashboard() {
     return () => {
       socket.off("gps", handleGps);
     };
-  }, []);
+  }, [socket]);
 
   const guardColumns = [
     { title: "Login", dataIndex: "login", key: "login" },
@@ -463,11 +498,11 @@ export default function Dashboard() {
                   size="medium"
                   className="w-40"
                   placeholder="Obyekt"
-                  value={selectedMap?.id}
+                  value={selectedMapId || selectedMap?.id}
                   onChange={(id) => {
                     const map = maps.find((m) => m.id === id);
                     setSelectedMap(map);
-                    handleSelectMap(map.id);
+                    handleSelectMap(id);
                   }}
                 >
                   {maps.map((item) => (
