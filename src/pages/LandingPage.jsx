@@ -88,14 +88,15 @@ function App() {
             <Shield className="w-8 h-8 text-emerald-400" />
             <span className="text-xl font-bold">Guard Monitoring</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col xl:flex-row xl:items-center gap-3">
             <a
               href="/login"
-              className="px-6 py-2 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 rounded-lg font-semibold transition-all hover:scale-105 flex items-center gap-2"
+              className="px-6 py-2 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 rounded-lg font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <LogIn className="w-4 h-4" />
               Kirish
             </a>
+
             <button className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/50">
               Demo so'rash
             </button>
@@ -103,7 +104,7 @@ function App() {
         </div>
       </nav>
 
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-40 xl:pt-20">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black"></div>
 
         <div className="absolute inset-0 opacity-20">
