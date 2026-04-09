@@ -12,8 +12,20 @@ import {
   Table,
 } from "antd";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { Trash2, Edit, Eye, PowerOff } from "lucide-react";
+import "./Users.css";
 
 const Users = () => {
+  const { t, i18n } = useTranslation();
+
+  // Get current locale based on language
+  const currentLocale =
+    i18n.language === "uz"
+      ? "uz-UZ"
+      : i18n.language === "ru"
+        ? "ru-RU"
+        : "en-US";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +44,7 @@ const Users = () => {
         setData(res.data);
         setLoading(false);
       } catch (error) {
-        toast.error("Foydalanuvchilarni yuklashda xatolik yuz berdi");
+        toast.error(t("messages.loadUsersError"));
       }
     };
     getUsers();
@@ -41,7 +53,7 @@ const Users = () => {
   const handleCreate = async (values) => {
     try {
       await instance.post("/user", values);
-      toast.success("Foydalanuvchi muvaffaqiyatli yaratildi");
+      toast.success(t("messages.userCreated"));
       setIsFormModalOpen(false);
       form.resetFields();
       setLoading(true);
@@ -49,83 +61,102 @@ const Users = () => {
       // console.log(error?.response?.data?.message);
       let errText = "";
       if (error?.response?.data?.message.includes("duplicate"))
-        errText = "Boshqa login kiriting";
-      toast.error(errText || "Foydalanuvchini yaratishda xatolik yuz berdi");
+        errText = t("errors.duplicateLogin");
+      toast.error(errText || t("messages.createUserError"));
     }
   };
 
   const handleEdit = async (values) => {
     try {
       await instance.patch("/user/" + selected.id, values);
-      toast.success("Foydalanuvchi ma’lumotlari yangilandi");
+      toast.success(t("messages.userUpdated"));
       setIsFormModalOpen(false);
       form.resetFields();
       setLoading(true);
     } catch (error) {
       let errText = "";
       if (error?.response?.data?.message.includes("duplicate"))
-        errText = "Boshqa login kiriting";
-      toast.error(errText || "Ma’lumotlarni yangilashda xatolik yuz berdi");
+        errText = t("errors.duplicateLogin");
+      toast.error(errText || t("messages.updateUserError"));
     }
   };
 
   const handleInactive = async (id) => {
     try {
       await instance.delete("/user/" + id);
-      toast.success("Foydalanuvchi muvaffaqiyatli nofaollashtirildi");
+      toast.success(t("messages.userDeactivated"));
       setLoading(true);
     } catch (error) {
-      toast.error("Foydalanuvchini nofaollashtirishda xatolik yuz berdi");
+      toast.error(t("messages.deactivateUserError"));
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await instance.delete("/user/delete/" + id);
-      toast.success("Foydalanuvchi muvaffaqiyatli o'chirildi");
+      toast.success(t("messages.userDeleted"));
       setLoading(true);
     } catch (error) {
-      toast.error("Foydalanuvchini o'chirishda xatolik yuz berdi");
+      toast.error(t("messages.deleteUserError"));
     }
   };
 
   const userColumns = [
-    { title: "ID", dataIndex: "id" },
-    { title: "Login", dataIndex: "login" },
-    { title: "Foydalanuvchi nomi", dataIndex: "username" },
-    { title: "Roli", dataIndex: "role" },
+    { title: t("usersPage.id"), dataIndex: "id" },
+    { title: t("usersPage.login"), dataIndex: "login" },
+    { title: t("usersPage.username"), dataIndex: "username" },
     {
-      title: "Holati",
+      title: t("usersPage.role"),
+      dataIndex: "role",
+      render: (role) => {
+        const roleMap = {
+          ADMIN: t("usersPage.admin"),
+          GUARD: t("usersPage.guard"),
+          OPERATOR: t("usersPage.operator"),
+        };
+        return roleMap[role] || role;
+      },
+    },
+    {
+      title: t("usersPage.status"),
       dataIndex: "status",
       render: (status) =>
         status === "ACTIVE" ? (
-          <p className="text-green-500">Faol</p>
+          <p className="text-green-500">{t("common.active")}</p>
         ) : (
-          <p className="text-red-500">Nofaol</p>
+          <p className="text-red-500">{t("common.inactive")}</p>
         ),
     },
     {
-      title: "Yaratilgan sana",
+      title: t("usersPage.createdDate"),
       dataIndex: "createdAt",
-      render: (date) => new Date(date).toLocaleString("uz-UZ"),
+      render: (date) =>
+        new Date(date).toLocaleString(currentLocale, {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false, // 🔥 24 soatlik format
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }),
     },
     {
-      title: "Amallar",
+      title: t("usersPage.actions"),
       render: (_, record) => (
         <Space>
-          <Popconfirm
-            title="Rostdan ham o'chirmoqchimisiz?"
-            okText="Ha"
-            cancelText="Yo‘q"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button danger>O‘chirish</Button>
-          </Popconfirm>
+          <Button
+            className="btn-details"
+            icon={<Eye className="w-4 h-4" />}
+            onClick={() => {
+              setSelected(record);
+              setIsModalOpen(true);
+            }}
+            title={t("usersPage.details")}
+          />
 
           <Button
-            // type="text"
-            style={{ color: "#1677ff" }} // primary
+            className="btn-edit"
+            icon={<Edit className="w-4 h-4" />}
             onClick={() => {
               setSelected(record);
               setFormMode("edit");
@@ -133,56 +164,91 @@ const Users = () => {
               setSelectedRole(record.role);
               setIsFormModalOpen(true);
             }}
-          >
-            Tahrirlash
-          </Button>
+            title={t("usersPage.edit")}
+          />
 
-          <Button
-            style={{ color: "#13c2c2" }} // info
-            onClick={() => {
-              setSelected(record);
-              setIsModalOpen(true);
-            }}
+          <Popconfirm
+            title={t("usersPage.confirmDelete")}
+            okText={t("usersPage.yes")}
+            cancelText={t("usersPage.no")}
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(record.id)}
+            icon={
+              <span style={{ color: "#ef4444", fontSize: "18px" }}>⚠️</span>
+            }
           >
-            Batafsil
-          </Button>
+            <Button
+              className="btn-delete"
+              icon={<Trash2 className="w-4 h-4" />}
+              title={t("usersPage.delete")}
+            />
+          </Popconfirm>
 
           {record?.status === "ACTIVE" && (
             <Button
-              style={{ color: "#faad14" }} // warning
+              className="btn-deactivate"
+              icon={<PowerOff className="w-4 h-4" />}
               onClick={() => handleInactive(record.id)}
-            >
-              Nofaollashtirish
-            </Button>
+              title={t("usersPage.deactivate")}
+            />
           )}
         </Space>
       ),
     },
   ];
+
   return (
-    <div>
-      <div className="mb-4">
-        <Button
-          type="primary"
-          onClick={() => {
-            setFormMode("create");
-            setSelected(null);
-            setSelectedRole(null);
-            form.resetFields();
-            setIsFormModalOpen(true);
-          }}
-        >
-          Foydalanuvchi qo‘shish
-        </Button>
+    <div className="min-h-screen bg-gray-950 p-6 relative overflow-hidden">
+      {/* Background effects like LandingPage */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse animation-delay-1s"></div>
       </div>
 
-      <Table
-        dataSource={data}
-        rowKey={"id"}
-        columns={userColumns}
-        pagination={true}
-        loading={loading}
-      />
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">
+              {t("usersPage.title") || t("navigation.users")}
+            </h1>
+            <p className="text-gray-400 text-sm">
+              {t("usersPage.subtitle") || t("dashboardPage.guards")}
+            </p>
+          </div>
+          <Button
+            type="primary"
+            size="large"
+            className="btn-create"
+            onClick={() => {
+              setFormMode("create");
+              setSelected(null);
+              setSelectedRole(null);
+              form.resetFields();
+              setIsFormModalOpen(true);
+            }}
+          >
+            {t("usersPage.addUser")}
+          </Button>
+        </div>
+
+        <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+          <Table
+            dataSource={data}
+            rowKey={"id"}
+            columns={userColumns}
+            pagination={{
+              showSizeChanger: false,
+              showTotal: (total) => t("pagination.total", { count: total }),
+              className: "dark-pagination pagination-dark",
+            }}
+            loading={loading}
+            className="dark-table table-large"
+            size="middle"
+            rowClassName={() => "dark-table-row"}
+          />
+        </div>
+      </div>
 
       {/* Batafsil modal */}
       <Modal
@@ -190,26 +256,54 @@ const Users = () => {
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={700}
-        title="Foydalanuvchi ma'lumotlari"
+        title={
+          <span className="text-white font-semibold">
+            {t("usersPage.userDetails")}
+          </span>
+        }
+        className="dark-modal modal-dark"
       >
         {selected && (
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label="Login">
+          <Descriptions
+            bordered
+            column={1}
+            className="dark-descriptions"
+            labelStyle={{
+              backgroundColor: "#1f2937",
+              color: "#9ca3af",
+              borderColor: "#374151",
+            }}
+            contentStyle={{
+              backgroundColor: "#111827",
+              color: "#f3f4f6",
+              borderColor: "#374151",
+            }}
+          >
+            <Descriptions.Item label={t("usersPage.login")}>
               {selected.login}
             </Descriptions.Item>
-            <Descriptions.Item label="Foydalanuvchi nomi">
+            <Descriptions.Item label={t("usersPage.username")}>
               {selected.username}
             </Descriptions.Item>
-            <Descriptions.Item label="Roli">{selected.role}</Descriptions.Item>
-            <Descriptions.Item label="Holati">
+            <Descriptions.Item label={t("usersPage.role")}>
+              {selected.role}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("usersPage.status")}>
               {selected.status === "ACTIVE" ? (
-                <p className="text-green-500">Faol</p>
+                <span className="text-emerald-400">{t("common.active")}</span>
               ) : (
-                <p className="text-red-500">Nofaol</p>
+                <span className="text-red-400">{t("common.inactive")}</span>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Yaratilgan sana">
-              {new Date(selected.createdAt).toLocaleString("uz-UZ")}
+            <Descriptions.Item label={t("usersPage.createdDate")}>
+              {new Date(selected.createdAt).toLocaleString(currentLocale, {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false, // 🔥 24 soatlik format
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })}
             </Descriptions.Item>
           </Descriptions>
         )}
@@ -221,10 +315,13 @@ const Users = () => {
         onCancel={() => setIsFormModalOpen(false)}
         footer={null}
         title={
-          formMode === "create"
-            ? "Yangi foydalanuvchi qo‘shish"
-            : "Foydalanuvchini tahrirlash"
+          <span className="text-white font-semibold">
+            {formMode === "create"
+              ? t("usersPage.newUser")
+              : t("usersPage.editUser")}
+          </span>
         }
+        className="dark-modal modal-dark-backdrop"
       >
         <Form
           form={form}
@@ -232,42 +329,50 @@ const Users = () => {
           onFinish={(values) =>
             formMode === "create" ? handleCreate(values) : handleEdit(values)
           }
+          className="dark-form"
         >
-          <Form.Item label="Foydalanuvchi nomi" name="username">
-            <Input />
+          <Form.Item
+            label={
+              <span className="text-gray-300">{t("usersPage.username")}</span>
+            }
+            name="username"
+          >
+            <Input className="bg-gray-800 border-gray-600 text-white placeholder-gray-500" />
           </Form.Item>
           <Form.Item
-            label="Login"
+            label={
+              <span className="text-gray-300">{t("usersPage.login")}</span>
+            }
             name="login"
-            rules={[{ required: true, message: "Loginni kiriting" }]}
+            rules={[{ required: true, message: t("usersPage.enterLogin") }]}
           >
-            <Input />
+            <Input className="bg-gray-800 border-gray-600 text-white placeholder-gray-500" />
           </Form.Item>
           {formMode == "create" ? (
             <>
               <Form.Item
-                label="Parol"
+                label={
+                  <span className="text-gray-300">
+                    {t("usersPage.password")}
+                  </span>
+                }
                 name="password"
                 rules={[
-                  { required: true, message: "Parolni kiriting" },
+                  { required: true, message: t("usersPage.enterPassword") },
                   {
                     validator: (_, value) => {
                       if (
                         selectedRole === "GUARD" &&
                         (!value || value.length !== 6)
                       ) {
-                        return Promise.reject(
-                          "Qo'riqchi roli uchun 6 ta raqamdan iborat parol kiriting",
-                        );
+                        return Promise.reject(t("errors.guardPasswordLength"));
                       }
                       if (
                         selectedRole === "GUARD" &&
                         value &&
                         !/^\d{6}$/.test(value)
                       ) {
-                        return Promise.reject(
-                          "Parol faqat 6 ta raqamdan iborat bo'lishi kerak",
-                        );
+                        return Promise.reject(t("errors.guardPasswordDigits"));
                       }
                       return Promise.resolve();
                     },
@@ -277,20 +382,25 @@ const Users = () => {
                 <Input.Password
                   maxLength={selectedRole === "GUARD" ? 6 : undefined}
                   placeholder={
-                    selectedRole === "GUARD" ? "6 ta raqam" : "Parol"
+                    selectedRole === "GUARD"
+                      ? "6 ta raqam"
+                      : t("usersPage.password")
                   }
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500"
                 />
               </Form.Item>
               <Form.Item
-                label="Roli"
+                label={
+                  <span className="text-gray-300">{t("usersPage.role")}</span>
+                }
                 name="role"
-                rules={[{ required: true, message: "Rolni tanlang" }]}
+                rules={[{ required: true, message: t("usersPage.selectRole") }]}
               >
                 <Select
                   options={[
-                    { label: "Admin", value: "ADMIN" },
-                    { label: "Qo‘riqchi", value: "GUARD" },
-                    { label: "Operator", value: "OPERATOR" },
+                    { label: t("usersPage.admin"), value: "ADMIN" },
+                    { label: t("usersPage.guard"), value: "GUARD" },
+                    { label: t("usersPage.operator"), value: "OPERATOR" },
                   ]}
                   onChange={(value) => {
                     setSelectedRole(value);
@@ -298,13 +408,18 @@ const Users = () => {
                       form.setFieldsValue({ password: "" });
                     }
                   }}
+                  className="dark-select"
                 />
               </Form.Item>
             </>
           ) : (
             <>
               <Form.Item
-                label="Yangi parol"
+                label={
+                  <span className="text-gray-300">
+                    {t("usersPage.newPassword")}
+                  </span>
+                }
                 name="password"
                 rules={[
                   { required: false },
@@ -315,18 +430,14 @@ const Users = () => {
                         selected?.role === "GUARD" &&
                         value.length !== 6
                       ) {
-                        return Promise.reject(
-                          "Qo'riqchi roli uchun 6 ta raqamdan iborat parol kiriting",
-                        );
+                        return Promise.reject(t("errors.guardPasswordLength"));
                       }
                       if (
                         value &&
                         selected?.role === "GUARD" &&
                         !/^\d{6}$/.test(value)
                       ) {
-                        return Promise.reject(
-                          "Parol faqat 6 ta raqamdan iborat bo'lishi kerak",
-                        );
+                        return Promise.reject(t("errors.guardPasswordDigits"));
                       }
                       return Promise.resolve();
                     },
@@ -338,27 +449,37 @@ const Users = () => {
                   placeholder={
                     selected?.role === "GUARD"
                       ? "6 ta raqam"
-                      : "Agar o'zgartirmoqchi bo'lsangiz, bu yerga kiriting"
+                      : t("passwordChange.placeholder")
                   }
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500"
                 />
               </Form.Item>
               <Form.Item
-                label="Holati"
+                label={
+                  <span className="text-gray-300">{t("usersPage.status")}</span>
+                }
                 name="status"
-                rules={[{ required: true, message: "Holatni tanlang" }]}
+                rules={[
+                  { required: true, message: t("usersPage.selectStatus") },
+                ]}
               >
                 <Select
                   options={[
-                    { label: "Faol", value: "ACTIVE" },
-                    { label: "Nofaol", value: "INACTIVE" },
+                    { label: t("common.active"), value: "ACTIVE" },
+                    { label: t("common.inactive"), value: "INACTIVE" },
                   ]}
+                  className="dark-select"
                 />
               </Form.Item>
             </>
           )}
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              {formMode === "create" ? "Qo‘shish" : "Yangilash"}
+            <Button
+              htmlType="submit"
+              block
+              className="btn-create"
+            >
+              {formMode === "create" ? t("common.add") : t("common.save")}
             </Button>
           </Form.Item>
         </Form>

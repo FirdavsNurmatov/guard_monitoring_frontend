@@ -15,6 +15,8 @@ import {
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const defaultIcon = new L.Icon({
   iconUrl:
@@ -71,6 +73,7 @@ const guardMarkers = [
 ];
 
 function App() {
+  const { t } = useTranslation();
   const [scrollY, setScrollY] = useState(0);
   const [selectedGuard, setSelectedGuard] = useState(null);
 
@@ -88,18 +91,23 @@ function App() {
             <Shield className="w-8 h-8 text-emerald-400" />
             <span className="text-xl font-bold">Guard Monitoring</span>
           </div>
-          <div className="flex flex-col xl:flex-row xl:items-center gap-3">
+          <div className="flex items-center gap-4">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1.5">
+              <LanguageSwitcher />
+            </div>
+            <div className="flex flex-col xl:flex-row xl:items-center gap-3">
             <a
               href="/login"
               className="px-6 py-2 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 rounded-lg font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <LogIn className="w-4 h-4" />
-              Kirish
+              {t("common.login")}
             </a>
 
             <button className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/50">
-              Demo so'rash
+              {t("landing.requestDemo")}
             </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -118,17 +126,13 @@ function App() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-              Qorovullarni{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-500">
-                real vaqt rejimida
-              </span>{" "}
-              nazorat qiling
+              {t("landing.realTimeMonitoring")}
             </h1>
             <p className="text-xl text-gray-400">
-              Har bir yurishni kuzating, xavfsizlikni oshiring
+              {t("landing.trackEveryMove")}
             </p>
             <button className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold text-lg transition-all hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/50 flex items-center gap-2 group">
-              Demo so'rash
+              {t("landing.requestDemo")}
               <Activity className="w-5 h-5 group-hover:animate-pulse" />
             </button>
           </div>
@@ -198,33 +202,33 @@ function App() {
       <section className="relative py-24 bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
-            Qanday <span className="text-emerald-400">ishlaydi</span>
+            {t("landing.howItWorks")}
           </h2>
 
           <div className="grid md:grid-cols-4 gap-8">
             {[
               {
                 icon: Map,
-                title: "NFC kartalar joylashtiriladi",
-                desc: "Muhim nuqtalarga kartalar o'rnatiladi",
+                title: t("landing.step1Title"),
+                desc: t("landing.step1Desc"),
                 delay: "0s",
               },
               {
                 icon: Smartphone,
-                title: "Qorovul planshet bilan uradi",
-                desc: "Mobil qurilma orqali skanerlash",
+                title: t("landing.step2Title"),
+                desc: t("landing.step2Desc"),
                 delay: "0.2s",
               },
               {
                 icon: Wifi,
-                title: "Ma'lumot tizimga yuboriladi",
-                desc: "Real vaqtda axborot uzatiladi",
+                title: t("landing.step3Title"),
+                desc: t("landing.step3Desc"),
                 delay: "0.4s",
               },
               {
                 icon: Activity,
-                title: "Admin real vaqtda ko'radi",
-                desc: "Dashboard orqali monitoring",
+                title: t("landing.step4Title"),
+                desc: t("landing.step4Desc"),
                 delay: "0.6s",
               },
             ].map((step, index) => (
@@ -252,7 +256,7 @@ function App() {
 
         <div className="relative max-w-7xl mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
-            Live <span className="text-emerald-400">Dashboard</span>
+            {t("landing.liveDashboard")}
           </h2>
 
           <div className="relative bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700 overflow-hidden">
@@ -260,21 +264,21 @@ function App() {
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gray-900 p-6 rounded-xl border border-gray-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400">Faol qorovullar</span>
+                    <span className="text-gray-400">{t("landing.activeGuards")}</span>
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                   </div>
                   <div className="text-3xl font-bold text-emerald-400">12</div>
                 </div>
                 <div className="bg-gray-900 p-6 rounded-xl border border-gray-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400">Bugungi tekshiruvlar</span>
+                    <span className="text-gray-400">{t("landing.todayChecks")}</span>
                     <Check className="w-5 h-5 text-blue-400" />
                   </div>
                   <div className="text-3xl font-bold text-blue-400">248</div>
                 </div>
                 <div className="bg-gray-900 p-6 rounded-xl border border-red-900/50">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400">O'tkazilgan nuqtalar</span>
+                    <span className="text-gray-400">{t("landing.missedPoints")}</span>
                     <Bell className="w-5 h-5 text-red-400 animate-pulse" />
                   </div>
                   <div className="text-3xl font-bold text-red-400">3</div>
@@ -313,7 +317,7 @@ function App() {
                               <p
                                 className={`text-xs ${guard.status === "active" ? "text-green-600" : "text-red-600"}`}
                               >
-                                {guard.status === "active" ? "Faol" : "Nofaol"}
+                                {guard.status === "active" ? t("common.active") : t("common.inactive")}
                               </p>
                             </div>
                           </Popup>
@@ -323,7 +327,7 @@ function App() {
                   </div>
 
                   <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-                    <h3 className="font-semibold mb-4">Tekshiruv Tarixi</h3>
+                    <h3 className="font-semibold mb-4">{t("landing.checkHistory")}</h3>
                     <div className="space-y-3">
                       {[
                         {
@@ -380,7 +384,7 @@ function App() {
                     <div className="p-4 border-b border-gray-700">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Camera className="w-5 h-5 text-emerald-400" />
-                        Qorovullarni Ko'rish
+                        {t("landing.viewGuards")}
                       </h3>
                     </div>
                     <div className="max-h-[500px] overflow-y-auto">
@@ -407,10 +411,10 @@ function App() {
                               <p
                                 className={`text-xs ${guard.status === "active" ? "text-emerald-400" : "text-red-400"}`}
                               >
-                                {guard.status === "active" ? "Faol" : "Nofaol"}
+                                {guard.status === "active" ? t("common.active") : t("common.inactive")}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
-                                Vaqti: 14:32
+                                {t("landing.time")}: 14:32
                               </p>
                             </div>
                             <div
@@ -425,7 +429,7 @@ function App() {
                   {selectedGuard && (
                     <div className="bg-gray-900 rounded-xl border border-emerald-500/30 overflow-hidden">
                       <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-                        <h3 className="font-semibold">Live Fotosuratlar</h3>
+                        <h3 className="font-semibold">{t("landing.livePhotos")}</h3>
                         <button
                           onClick={() => setSelectedGuard(null)}
                           className="text-gray-400 hover:text-white"
@@ -457,30 +461,30 @@ function App() {
       <section className="relative py-24 bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
-            Asosiy <span className="text-emerald-400">afzalliklar</span>
+            {t("landing.keyFeatures")}
           </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: Activity,
-                title: "Real vaqt nazorat",
-                desc: "Har bir harakatni darhol kuzating",
+                title: t("landing.realTimeControl"),
+                desc: t("landing.trackEveryMoveDesc"),
               },
               {
                 icon: Radio,
-                title: "NFC orqali tekshiruv",
-                desc: "Zamonaviy texnologiya bilan himoya",
+                title: t("landing.nfcCheck"),
+                desc: t("landing.nfcCheckDesc"),
               },
               {
                 icon: Camera,
-                title: "Foto va vaqt isboti",
-                desc: "Har bir tekshiruv hujjatlashtiriladi",
+                title: t("landing.photoTimeProof"),
+                desc: t("landing.photoTimeProofDesc"),
               },
               {
                 icon: Bell,
-                title: "Avtomatik ogohlantirish",
-                desc: "Muammolarni darhol aniqlash",
+                title: t("landing.autoAlerts"),
+                desc: t("landing.autoAlertsDesc"),
               },
             ].map((feature, index) => (
               <div
@@ -511,18 +515,13 @@ function App() {
 
         <div className="relative max-w-4xl mx-auto px-6 text-center space-y-8">
           <h2 className="text-5xl md:text-6xl font-bold leading-tight">
-            Xavfsizlikni yangi{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-500">
-              darajaga
-            </span>{" "}
-            olib chiqing
+            {t("landing.takeSecurityToNewLevel")}
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Zamonaviy monitoring tizimi bilan qorovullarni real vaqtda kuzatib
-            boring va xavfsizlikni maksimal darajada oshiring
+            {t("landing.modernMonitoringDesc")}
           </p>
           <button className="px-10 py-5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold text-lg transition-all hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/50 inline-flex items-center gap-3 group">
-            Demo olish
+            {t("landing.getDemo")}
             <Clock className="w-6 h-6 group-hover:rotate-12 transition-transform" />
           </button>
         </div>
@@ -536,7 +535,7 @@ function App() {
               <span className="text-xl font-bold">Guard Monitoring</span>
             </div>
             <p className="text-gray-400">
-              © 2025 Guard Monitoring. Barcha huquqlar himoyalangan.
+              {t("landing.copyright")}
             </p>
           </div>
         </div>

@@ -4,9 +4,11 @@ import { instance } from "../config/axios-instance";
 import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-// import GuardMonitoring from '../../public/GuardMonitoring.png'
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function Login() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -59,13 +61,13 @@ export default function Login() {
       const message = error?.response?.data?.message || "";
 
       if (message.includes("incorrect")) {
-        setApiError("Login yoki parol noto'g'ri");
+        setApiError(t("errors.invalidCredentials"));
       } else if (message.includes("found")) {
-        setApiError("Bunday foydalanuvchi mavjud emas");
+        setApiError(t("errors.userNotFound"));
       } else if (message.includes("inactive")) {
-        setApiError("Organizatsiya aktiv emas");
+        setApiError(t("errors.inactiveOrganization"));
       } else {
-        setApiError(message || "Xatolik yuz berdi");
+        setApiError(message || t("errors.serverError"));
       }
     } finally {
       setLoading(false);
@@ -76,12 +78,20 @@ export default function Login() {
     <div className="flex min-h-screen bg-gray-950 relative overflow-hidden">
       {/* Animated background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black"></div>
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
+      <div className="fixed top-4 right-4 z-50">
+        <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg px-3 py-1.5 shadow-lg">
+          <LanguageSwitcher />
+        </div>
+      </div>
+
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="opacity-20">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
+        </div>
       </div>
 
       {/* IMAGE */}
@@ -111,7 +121,7 @@ export default function Login() {
               {/* LOGIN */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Login
+                  {t("common.username")}
                 </label>
                 <input
                   type="text"
@@ -119,6 +129,7 @@ export default function Login() {
                   onChange={(e) =>
                     setFormData({ ...formData, login: e.target.value })
                   }
+                  placeholder={t("login.usernamePlaceholder")}
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-white placeholder-gray-500 transition-all"
                   required
                 />
@@ -127,7 +138,7 @@ export default function Login() {
               {/* PASSWORD */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Parol
+                  {t("common.password")}
                 </label>
                 <div className="relative">
                   <input
@@ -136,6 +147,7 @@ export default function Login() {
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
                     }
+                    placeholder={t("login.passwordPlaceholder")}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-white placeholder-gray-500 pr-12 transition-all"
                     required
                   />
@@ -166,7 +178,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-all hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Davom etayabdi..." : "Davom etish"}
+                {loading ? t("common.loading") : t("login.loginButton")}
               </button>
             </form>
           </div>

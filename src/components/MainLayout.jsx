@@ -1,4 +1,4 @@
-import { Button, Layout, Menu, Modal, theme } from "antd";
+import { Button, Layout, Menu, Modal } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -8,15 +8,16 @@ import {
 } from "@ant-design/icons";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { Shield } from "lucide-react";
 
 const { Header, Sider, Content } = Layout;
 
 export default function MainLayout() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
 
   const navigate = useNavigate();
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -27,92 +28,130 @@ export default function MainLayout() {
   })();
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={250} trigger={null} collapsible collapsed={collapsed}>
+    <Layout style={{ minHeight: "100vh", background: "#030712" }}>
+      {/* Background effects like LandingPage */}
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black pointer-events-none z-0"></div>
+      <div className="fixed inset-0 opacity-20 pointer-events-none z-0">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
         <div
-          style={{
-            color: "white",
-            textAlign: "center",
-            padding: "16px 0",
-            fontSize: "18px",
-            fontWeight: "bold",
-            borderBottom: "1px solid rgba(255,255,255,0.2)",
-          }}
-        >
-          🛠️ Admin panel
+          className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse animation-delay-1s"
+        ></div>
+      </div>
+
+      <Sider
+        width={250}
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        className="sider-dark"
+      >
+        <div className="flex items-center justify-center gap-2 py-4 border-b border-gray-700/50">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          {!collapsed && (
+            <span className="text-white font-bold text-lg">
+              {t("navigation.admin")}
+            </span>
+          )}
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          onClick={({ key }) => {
-            if (key === "4") {
-              setLogoutOpen(true);
-            }
-          }}
-          items={[
-            {
-              key: "2",
-              icon: <UsergroupAddOutlined />,
-              label: <Link to="/admin/users">Foydalanuvchilar</Link>,
-            },
-            {
-              key: "3",
-              icon: <DashboardOutlined />,
-              label: <Link to="/monitoring">Kuzatuv paneli</Link>,
-            },
-            {
-              key: "4",
-              icon: <LogoutOutlined />,
-              danger: true,
-              label: <span onClick={() => setLogoutOpen(true)}>Chiqish</span>,
-            },
-          ]}
-        />
-        <Modal
-          title="Tizimdan chiqmoqchimisiz?"
-          open={logoutOpen}
-          onOk={() => {
-            localStorage.removeItem("auth");
-            navigate("/", { replace: true });
-          }}
-          onCancel={() => setLogoutOpen(false)}
-          okText="Ha, chiqish"
-          cancelText="Bekor qilish"
-          okType="danger"
-          centered
-        />
+        <div className="py-2">
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            className="menu-dark"
+            onClick={({ key }) => {
+              if (key === "4") {
+                setLogoutOpen(true);
+              }
+            }}
+            items={[
+              {
+                key: "2",
+                icon: <UsergroupAddOutlined />,
+                label: (
+                  <Link
+                    to="/admin/users"
+                    className="text-gray-300 hover:text-white text-base"
+                  >
+                    {t("navigation.users")}
+                  </Link>
+                ),
+              },
+              {
+                key: "3",
+                icon: <DashboardOutlined className="w-5 h-5" />,
+                label: (
+                  <Link
+                    to="/monitoring"
+                    className="text-gray-300 hover:text-white text-base"
+                  >
+                    {t("navigation.monitoring")}
+                  </Link>
+                ),
+              },
+              {
+                key: "4",
+                icon: <LogoutOutlined className="w-5 h-5" />,
+                danger: true,
+                label: (
+                  <span className="text-red-400 text-base">
+                    {t("common.logout")}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </div>
       </Sider>
-      <Layout>
+
+      <Modal
+        title={
+          <span className="text-white font-semibold">
+            {t("navigation.logout")}
+          </span>
+        }
+        open={logoutOpen}
+        onOk={() => {
+          localStorage.removeItem("auth");
+          navigate("/", { replace: true });
+        }}
+        onCancel={() => setLogoutOpen(false)}
+        okText={t("common.yes")}
+        cancelText={t("common.cancel")}
+        okType="danger"
+        centered
+        className="dark-modal modal-dark"
+      />
+      <Layout style={{ background: "transparent", zIndex: 10 }}>
         <Header
-          style={{
-            padding: 0,
-            background: colorBgContainer,
-            display: "flex",
-            alignItems: "center",
-          }}
+          className="header-dark px-4"
+          style={{ padding: '0 16px' }}
         >
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={
+              collapsed ? (
+                <MenuUnfoldOutlined className="text-white text-lg" />
+              ) : (
+                <MenuFoldOutlined className="text-white text-lg" />
+              )
+            }
             onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: "18px",
-              width: 64,
-              height: 64,
-            }}
-          />
-          <h3 style={{ marginLeft: 16 }}>Boshqaruv paneli</h3>
+            className="btn-toggle"
+          />{" "}
+          <h3 className="text-white font-semibold ml-4">
+            {t("common.dashboard")}
+          </h3>
+          <div className="ml-auto mr-4">
+            <LanguageSwitcher />
+          </div>
         </Header>
 
         <Content
-          style={{
-            margin: "24px 16px",
-            padding: 24,
-            minHeight: 280,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
+          className="content-dark p-6"
+          style={{ padding: '24px' }}
         >
           <Outlet />
         </Content>

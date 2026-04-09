@@ -1,0 +1,63 @@
+
+/* Users Page Specific Styles - Only unique styles not in antd-dark.css */
+
+/* Action Button Styles - Custom colors for Users page */
+.btn-create {
+  background-color: #10b981 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-create:hover {
+  background-color: #34d399 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-delete {
+  background-color: #ff4d4f !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-delete:hover {
+  background-color: #ff7875 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-edit {
+  background-color: #fbbf24 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-edit:hover {
+  background-color: #fcd34d !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-details {
+  background-color: #8b5cf6 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-details:hover {
+  background-color: #a78bfa !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-deactivate {
+  background-color: #10b981 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-deactivate:hover {
+  background-color: #34d399 !important;
+  color: white !important;
+  border: none !important;
+}

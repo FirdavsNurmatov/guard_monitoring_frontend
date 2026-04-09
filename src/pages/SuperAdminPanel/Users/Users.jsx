@@ -169,10 +169,12 @@ const Users = () => {
 
           <Popconfirm
             title="Rostdan ham o'chirmoqchimisiz?"
+            description="Bu amalni qaytarib bo'lmaydi"
             okText="Ha"
             cancelText="Yo‘q"
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record.id)}
+            icon={<span style={{ color: '#ef4444', fontSize: '18px' }}>⚠️</span>}
           >
             <Button danger>O‘chirish</Button>
           </Popconfirm>

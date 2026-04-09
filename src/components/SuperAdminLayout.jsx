@@ -8,10 +8,13 @@ import {
 } from "@ant-design/icons";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const { Header, Sider, Content } = Layout;
 
 export default function SuperAdminLayout() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -41,7 +44,7 @@ export default function SuperAdminLayout() {
             borderBottom: "1px solid rgba(255,255,255,0.2)",
           }}
         >
-          Super Admin panel
+          {t("navigation.superadmin")}
         </div>
         <Menu
           theme="dark"
@@ -57,37 +60,47 @@ export default function SuperAdminLayout() {
               key: "1",
               icon: <PictureOutlined />,
               label: (
-                <Link to="/superadmin/organizations">Organizatsiyalar</Link>
+                <Link to="/superadmin/organizations">
+                  {t("navigation.organizations")}
+                </Link>
               ),
             },
             {
               key: "2",
               icon: <PictureOutlined />,
-              label: <Link to="/superadmin/objects">Obyektlar</Link>,
+              label: (
+                <Link to="/superadmin/objects">{t("navigation.objects")}</Link>
+              ),
             },
             {
               key: "3",
               icon: <UsergroupAddOutlined />,
-              label: <Link to="/superadmin/users">Foydalanuvchilar</Link>,
+              label: (
+                <Link to="/superadmin/users">{t("navigation.users")}</Link>
+              ),
             },
             {
               key: "4",
               icon: <LogoutOutlined />,
               danger: true,
-              label: <span onClick={() => setLogoutOpen(true)}>Chiqish</span>,
+              label: (
+                <span onClick={() => setLogoutOpen(true)}>
+                  {t("common.logout")}
+                </span>
+              ),
             },
           ]}
         />
         <Modal
-          title="Tizimdan chiqmoqchimisiz?"
+          title={t("messages.confirmDelete")}
           open={logoutOpen}
           onOk={() => {
             localStorage.removeItem("auth");
             navigate("/", { replace: true });
           }}
           onCancel={() => setLogoutOpen(false)}
-          okText="Ha, chiqish"
-          cancelText="Bekor qilish"
+          okText={t("common.yes")}
+          cancelText={t("common.cancel")}
           okType="danger"
           centered
         />
@@ -111,7 +124,10 @@ export default function SuperAdminLayout() {
               height: 64,
             }}
           />
-          <h3 style={{ marginLeft: 16 }}>Boshqaruv paneli</h3>
+          <h3 style={{ marginLeft: 16 }}>{t("common.dashboard")}</h3>
+          <div style={{ marginLeft: "auto", marginRight: 16 }}>
+            <LanguageSwitcher />
+          </div>
         </Header>
 
         <Content
