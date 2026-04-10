@@ -12,6 +12,7 @@ import {
   Select,
 } from "antd";
 import { instance } from "../../../config/axios-instance";
+import { formatDate } from "../../../utils/dateFormat";
 const { Option } = Select;
 
 const Organizations = () => {
@@ -129,7 +130,7 @@ const Organizations = () => {
       title: "Created at",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (value) => (value ? new Date(value).toLocaleString() : "-"),
+      render: (value) => (value ? formatDate(value, true) : "-"),
     },
     {
       title: "Amallar",
@@ -237,11 +238,11 @@ const Organizations = () => {
             </p>
             <p>
               <strong>Created At:</strong>{" "}
-              {new Date(selectedOrg.createdAt).toLocaleString()}
+              {formatDate(selectedOrg.createdAt, true)}
             </p>
             <p>
               <strong>Updated At:</strong>{" "}
-              {new Date(selectedOrg.updatedAt).toLocaleString()}
+              {formatDate(selectedOrg.updatedAt, true)}
             </p>
           </div>
         ) : (

@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/AdminPanel/Dashboard";
 import User from "./pages/AdminPanel/users/Users";
+import Journal from "./pages/AdminPanel/journal/Journal";
 import Organizations from "./pages/SuperAdminPanel/Organizations/Organizations";
 import SuperAdminLayout from "./components/SuperAdminLayout";
 import MainLayout from "./components/MainLayout";
@@ -58,6 +59,15 @@ function App() {
           element={
             <RoleChecker roles={["ADMIN"]}>
               <User />
+            </RoleChecker>
+          }
+        />
+        <Route
+          key={4}
+          path="journal"
+          element={
+            <RoleChecker roles={["ADMIN", "OPERATOR"]}>
+              <Journal />
             </RoleChecker>
           }
         />

@@ -46,6 +46,154 @@
   color: white !important;
 }
 
+.ant-picker {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  border-color: #10b981 !important;
+  color: white !important;
+}
+
+.ant-picker input,
+.ant-picker input::placeholder,
+.ant-picker .ant-picker-input,
+.ant-picker .ant-picker-input input,
+.ant-picker-input,
+.ant-picker-input input {
+  color: white !important;
+  background-color: transparent !important;
+}
+
+.ant-picker input::placeholder,
+.ant-picker-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.ant-picker-suffix {
+  color: #10b981 !important;
+}
+
+.dark-select .ant-picker-input {
+  color: white !important;
+}
+
+.dark-select .ant-picker-input input {
+  color: white !important;
+}
+
+.dark-select input {
+  color: white !important;
+}
+
+.date-picker-white .ant-picker-input input {
+  color: white !important;
+}
+
+.date-picker-white input {
+  color: white !important;
+}
+
+.date-picker-wrapper input {
+  color: white !important;
+}
+
+.ant-picker * input {
+  color: white !important;
+}
+
+.ant-picker-input > input {
+  color: white !important;
+}
+
+.ant-picker-range-input input {
+  color: white !important;
+}
+
+.ant-picker .ant-picker-input input {
+  color: white !important;
+}
+
+.ant-picker:hover,
+.ant-picker-focused {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+.ant-picker-dropdown {
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.ant-picker-panel-container {
+  background-color: #1f2937 !important;
+}
+
+.ant-picker-header {
+  color: white !important;
+  border-bottom: 1px solid #374151 !important;
+}
+
+.ant-picker-header button {
+  color: white !important;
+}
+
+.ant-picker-header button:hover {
+  color: #10b981 !important;
+}
+
+.ant-picker-body {
+  color: white !important;
+}
+
+.ant-picker-cell {
+  color: white !important;
+}
+
+.ant-picker-cell-in-view {
+  color: white !important;
+}
+
+.ant-picker-cell:hover {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.ant-picker-cell-selected {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+.ant-picker-cell-in-range .ant-picker-cell-inner {
+  background-color: #10b981 !important;
+  color: white !important;
+  border-radius: 2px !important;
+}
+
+.ant-picker-cell-in-range:hover .ant-picker-cell-inner {
+  background-color: #059669 !important;
+}
+
+.ant-picker-cell-range-start,
+.ant-picker-cell-range-end {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+.ant-picker-cell-range-start .ant-picker-cell-inner,
+.ant-picker-cell-range-end .ant-picker-cell-inner {
+  color: white !important;
+}
+
+.ant-picker-footer {
+  border-top: 1px solid #374151 !important;
+  color: white !important;
+}
+
+.ant-picker-today-btn {
+  color: #10b981 !important;
+}
+
+.ant-picker-today-btn:hover {
+  color: #34d399 !important;
+}
+
 .ant-select-dropdown {
   background-color: #1f2937 !important;
   border: 1px solid #374151 !important;

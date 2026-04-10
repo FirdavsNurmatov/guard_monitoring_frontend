@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Tooltip } from "react-leaflet";
 import { useTranslation } from "react-i18next";
+import { formatTime } from "../utils/dateFormat";
 
 export const CheckpointMarker = React.memo(function CheckpointMarker({
   cp,
@@ -89,11 +90,7 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
                 {latestLog && (
                   <>
                     <span>
-                      {latestLog.createdAtRaw.toLocaleString(currentLocale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })}
+                      {formatTime(latestLog.createdAtRaw)}
                     </span>
 
                     <b className="block">{latestLog.guard}</b>
@@ -125,11 +122,7 @@ export const CheckpointMarker = React.memo(function CheckpointMarker({
               {latestLog && (
                 <>
                   <span>
-                    {latestLog.createdAtRaw.toLocaleString(currentLocale, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })}
+                    {formatTime(latestLog.createdAtRaw)}
                   </span>
 
                   <b className="block">{latestLog.guard}</b>

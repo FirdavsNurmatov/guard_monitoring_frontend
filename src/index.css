@@ -1,2 +1,12 @@
 @import 'tailwindcss';
 @import './styles/antd-dark.css';
+
+/* Date picker in-range styles */
+.dark-picker .ant-picker-cell-in-range .ant-picker-cell-inner {
+  background-color: #10b981 !important;
+  color: white !important;
+  border-radius: 2px !important;
+}
+.dark-picker .ant-picker-cell-in-range:hover .ant-picker-cell-inner {
+  background-color: #059669 !important;
+}

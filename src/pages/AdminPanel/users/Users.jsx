@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Trash2, Edit, Eye, PowerOff } from "lucide-react";
 import "./Users.css";
+import { formatDate } from "../../../utils/dateFormat";
 
 const Users = () => {
   const { t, i18n } = useTranslation();
@@ -130,15 +131,7 @@ const Users = () => {
     {
       title: t("usersPage.createdDate"),
       dataIndex: "createdAt",
-      render: (date) =>
-        new Date(date).toLocaleString(currentLocale, {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false, // 🔥 24 soatlik format
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }),
+      render: (date) => formatDate(date, true),
     },
     {
       title: t("usersPage.actions"),
@@ -206,7 +199,7 @@ const Users = () => {
         <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse animation-delay-1s"></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <div className="relative z-10 w-full px-4">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">
@@ -296,14 +289,7 @@ const Users = () => {
               )}
             </Descriptions.Item>
             <Descriptions.Item label={t("usersPage.createdDate")}>
-              {new Date(selected.createdAt).toLocaleString(currentLocale, {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false, // 🔥 24 soatlik format
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })}
+              {formatDate(selected.createdAt, true)}
             </Descriptions.Item>
           </Descriptions>
         )}

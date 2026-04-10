@@ -4,6 +4,7 @@
     "logout": "Chiqish",
     "dashboard": "Boshqaruv paneli",
     "save": "Saqlash",
+    "clear": "Tozalash",
     "cancel": "Bekor qilish",
     "edit": "Tahrirlash",
     "delete": "O'chirish",
@@ -28,7 +29,9 @@
     "error": "Xatolik",
     "success": "Muvaffaqiyatli",
     "warning": "Ogohlantirish",
-    "info": "Ma'lumot"
+    "info": "Ma'lumot",
+    "startDate": "Boshlanish sana",
+    "endDate": "Tugash sana"
   },
   "navigation": {
     "home": "Asosiy",

@@ -23,19 +23,20 @@ export default function MainLayout() {
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   const selectedKey = (() => {
-    if (location.pathname.startsWith("/admin/users")) return "2";
+    if (location.pathname.startsWith("/admin/users")) return "1";
+    if (location.pathname.startsWith("/admin/journal")) return "2";
     return "";
   })();
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#030712" }}>
+    <Layout
+      style={{ height: "100vh", background: "#030712", overflow: "hidden" }}
+    >
       {/* Background effects like LandingPage */}
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black pointer-events-none z-0"></div>
       <div className="fixed inset-0 opacity-20 pointer-events-none z-0">
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse animation-delay-1s"
-        ></div>
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse animation-delay-1s"></div>
       </div>
 
       <Sider
@@ -44,6 +45,7 @@ export default function MainLayout() {
         collapsible
         collapsed={collapsed}
         className="sider-dark"
+        style={{ height: "100vh", overflow: "auto" }}
       >
         <div className="flex items-center justify-center gap-2 py-4 border-b border-gray-700/50">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
@@ -68,7 +70,7 @@ export default function MainLayout() {
             }}
             items={[
               {
-                key: "2",
+                key: "1",
                 icon: <UsergroupAddOutlined />,
                 label: (
                   <Link
@@ -76,6 +78,18 @@ export default function MainLayout() {
                     className="text-gray-300 hover:text-white text-base"
                   >
                     {t("navigation.users")}
+                  </Link>
+                ),
+              },
+              {
+                key: "2",
+                icon: <DashboardOutlined className="w-5 h-5" />,
+                label: (
+                  <Link
+                    to="/admin/journal"
+                    className="text-gray-300 hover:text-white text-base"
+                  >
+                    {t("dashboardPage.journal")}
                   </Link>
                 ),
               },
@@ -124,10 +138,18 @@ export default function MainLayout() {
         centered
         className="dark-modal modal-dark"
       />
-      <Layout style={{ background: "transparent", zIndex: 10 }}>
+      <Layout
+        style={{
+          background: "transparent",
+          zIndex: 10,
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Header
           className="header-dark px-4"
-          style={{ padding: '0 16px' }}
+          style={{ padding: "0 16px", flexShrink: 0 }}
         >
           <Button
             type="text"
@@ -149,10 +171,7 @@ export default function MainLayout() {
           </div>
         </Header>
 
-        <Content
-          className="content-dark p-6"
-          style={{ padding: '24px' }}
-        >
+        <Content className="content-dark" style={{ flex: 1, overflow: "auto" }}>
           <Outlet />
         </Content>
       </Layout>
