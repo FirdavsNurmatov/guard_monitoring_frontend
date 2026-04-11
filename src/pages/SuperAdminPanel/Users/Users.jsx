@@ -12,10 +12,12 @@ import {
   Modal,
 } from "antd";
 import { instance } from "../../../config/axios-instance";
+import { useTranslation } from "react-i18next";
 
 const { Option } = Select;
 
 const Users = () => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -37,7 +39,7 @@ const Users = () => {
       setOrganizations(data?.data || []);
     } catch (error) {
       message.error(
-        error?.response?.data?.message || "Organizationlarni olishda xatolik",
+        error?.response?.data?.message || t("superAdmin.organizations.loadError"),
       );
     }
   };
@@ -58,7 +60,7 @@ const Users = () => {
       }));
     } catch (error) {
       message.error(
-        error?.response?.data?.message || "Foydalanuvchilarni olishda xatolik",
+        error?.response?.data?.message || t("superAdmin.users.loadError"),
       );
     } finally {
       setListLoading(false);
@@ -82,7 +84,7 @@ const Users = () => {
           password: values.password || undefined, // optional
           organizationId: values?.organizationId,
         });
-        message.success("Admin yangilandi");
+        message.success(t("superAdmin.users.updatedSuccess"));
       } else {
         await instance.post("/superadmin/admin", {
           username: values.username,
@@ -90,14 +92,14 @@ const Users = () => {
           password: values.password,
           organizationId: values?.organizationId,
         });
-        message.success("Admin yaratildi");
+        message.success(t("superAdmin.users.createdSuccess"));
       }
 
       form.resetFields();
       setIsFormModalOpen(false);
       fetchUsers(pagination.current, pagination.pageSize);
     } catch (error) {
-      message.error(error?.response?.data?.message || "Xatolik yuz berdi");
+      message.error(error?.response?.data?.message || t("superAdmin.users.error"));
     } finally {
       setLoading(false);
     }
@@ -107,10 +109,10 @@ const Users = () => {
   const handleDelete = async (id) => {
     try {
       await instance.delete(`/superadmin/admin/${id}`);
-      message.success("Admin o‘chirildi");
+      message.success(t("superAdmin.users.deletedSuccess"));
       fetchUsers(pagination.current, pagination.pageSize);
     } catch (error) {
-      message.error(error?.response?.data?.message || "O‘chirishda xatolik");
+      message.error(error?.response?.data?.message || t("superAdmin.users.deleteError"));
     }
   };
 
@@ -126,28 +128,28 @@ const Users = () => {
       width: 80,
     },
     {
-      title: "Username",
+      title: t("superAdmin.users.username"),
       dataIndex: "username",
       key: "username",
     },
     {
-      title: "Login",
+      title: t("superAdmin.users.login"),
       dataIndex: "login",
       key: "login",
     },
     {
-      title: "Organization",
+      title: t("superAdmin.users.organization"),
       dataIndex: "organization",
       key: "organization",
       render: (org) => org?.name || "Global",
     },
     {
-      title: "Role",
+      title: t("superAdmin.users.role"),
       dataIndex: "role",
       key: "role",
     },
     {
-      title: "Amallar",
+      title: t("superAdmin.users.actions"),
       render: (_, record) => (
         <Space>
           <Button
@@ -164,19 +166,19 @@ const Users = () => {
               setIsFormModalOpen(true);
             }}
           >
-            Tahrirlash
+            {t("superAdmin.users.edit")}
           </Button>
 
           <Popconfirm
-            title="Rostdan ham o'chirmoqchimisiz?"
-            description="Bu amalni qaytarib bo'lmaydi"
-            okText="Ha"
-            cancelText="Yo‘q"
+            title={t("superAdmin.users.confirmDelete")}
+            description={t("superAdmin.users.cannotUndo")}
+            okText={t("common.yes")}
+            cancelText={t("common.no")}
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record.id)}
             icon={<span style={{ color: '#ef4444', fontSize: '18px' }}>⚠️</span>}
           >
-            <Button danger>O‘chirish</Button>
+            <Button danger>{t("superAdmin.users.delete")}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -186,7 +188,7 @@ const Users = () => {
   return (
     <div style={{ display: "flex", gap: 24, flexDirection: "column" }}>
       {/* 📋 LIST */}
-      <Card title="Admins">
+      <Card title={t("superAdmin.users.title")}>
         <Button
           type="primary"
           style={{ marginBottom: 16 }}
@@ -197,7 +199,7 @@ const Users = () => {
             setIsFormModalOpen(true);
           }}
         >
-          Create Admin
+          {t("superAdmin.users.createButton")}
         </Button>
 
         <Table
@@ -213,7 +215,7 @@ const Users = () => {
 
       {/* ➕ CREATE / EDIT MODAL */}
       <Modal
-        title={formMode === "edit" ? "Tahrirlash" : "Create Admin"}
+        title={formMode === "edit" ? t("superAdmin.users.editTitle") : t("superAdmin.users.createTitle")}
         open={isFormModalOpen}
         onCancel={() => {
           setIsFormModalOpen(false);
@@ -223,29 +225,29 @@ const Users = () => {
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
-            label="Username"
+            label={t("superAdmin.users.username")}
             name="username"
-            rules={[{ message: "Ism kiriting" }]}
+            rules={[{ message: t("superAdmin.users.enterUsername") }]}
           >
-            <Input placeholder="Masalan: John Doe" />
+            <Input placeholder={t("superAdmin.users.usernamePlaceholder")} />
           </Form.Item>
 
           <Form.Item
-            label="Login"
+            label={t("superAdmin.users.login")}
             name="login"
-            rules={[{ required: true, message: "Login kiriting" }]}
+            rules={[{ required: true, message: t("superAdmin.users.enterLogin") }]}
           >
-            <Input placeholder="Masalan: john@example.com" />
+            <Input placeholder={t("superAdmin.users.loginPlaceholder")} />
           </Form.Item>
 
           <Form.Item
-            label="Password"
+            label={t("superAdmin.users.password")}
             name="password"
             rules={
               formMode === "create"
                 ? [
-                    { required: true, message: "Parol kiriting" },
-                    { min: 6, message: "Kamida 6 ta belgi bo‘lishi kerak" },
+                    { required: true, message: t("superAdmin.users.enterPassword") },
+                    { min: 6, message: t("superAdmin.users.minChars") },
                   ]
                 : []
             }
@@ -253,15 +255,15 @@ const Users = () => {
             <Input.Password
               placeholder={
                 formMode === "edit"
-                  ? "O'zgartirish uchun kiriting (optional)"
-                  : "********"
+                  ? t("superAdmin.users.passwordOptional")
+                  : t("superAdmin.users.passwordPlaceholder")
               }
             />
           </Form.Item>
 
-          <Form.Item label="Organization" name="organizationId">
-            <Select placeholder="Organization tanlang (optional)">
-              <Option value={null}>Global admin (no organization)</Option>
+          <Form.Item label={t("superAdmin.users.organization")} name="organizationId">
+            <Select placeholder={t("superAdmin.users.selectOrganization")}>
+              <Option value={null}>{t("superAdmin.users.globalAdmin")}</Option>
               {organizations.map((org) => (
                 <Option key={org.id} value={org.id}>
                   {org.name}
@@ -272,7 +274,7 @@ const Users = () => {
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block>
-              {formMode === "edit" ? "Saqlash" : "Create Admin"}
+              {formMode === "edit" ? t("superAdmin.users.save") : t("superAdmin.users.create")}
             </Button>
           </Form.Item>
         </Form>

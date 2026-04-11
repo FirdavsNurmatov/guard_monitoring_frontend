@@ -2,6 +2,7 @@ import { Modal, Input, Upload, Button, Select } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import toast from "react-hot-toast";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { instance } from "../../../../config/axios-instance";
 import CheckpointsForm from "./CheckpointsForm";
 import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents, useMap } from "react-leaflet";
@@ -76,6 +77,7 @@ const useUndoRedo = (initialState) => {
 /* ================= COMPONENT ================= */
 
 const CreateModal = ({ open, onClose, fetchObjects }) => {
+  const { t } = useTranslation();
   /* ===== STATE ===== */
   const [objectName, setObjectName] = useState("");
   const [objectType, setObjectType] = useState("MAP");
@@ -116,7 +118,7 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
     instance
       .get("/superadmin/organizations")
       .then((res) => setOrganizations(res.data?.data || []))
-      .catch(() => toast.error("Organizationlarni olishda xatolik"));
+      .catch(() => toast.error(t("superAdmin.organizations.loadError")));
   }, []);
 
   useEffect(() => {
@@ -308,7 +310,7 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
       const dup = cardNumbers.find((v, i) => cardNumbers.indexOf(v) !== i);
 
       if (dup) {
-        toast.error(`Duplicate card number: ${dup}`);
+        toast.error(t("superAdmin.objects.duplicateCard") + `: ${dup}`);
         setCardNumberErrors({ [dup]: true });
         return;
       }
@@ -334,17 +336,17 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
           ),
         );
 
-        toast.success("Obyekt va checkpointlar yaratildi");
+        toast.success(t("superAdmin.objects.createdSuccess"));
         fetchObjects();
         onClose();
       } catch (e) {
         await instance.delete(`/superadmin/object/${objectId}`);
-        toast.error("Checkpoint xatolik – obyekt o‘chirildi");
+        toast.error(t("superAdmin.objects.checkpointError"));
       }
     } catch (err) {
       if (err?.response?.data?.message.includes("required"))
-        toast.error("Organization tanlang");
-      else toast.error("Saqlashda xatolik");
+        toast.error(t("superAdmin.objects.selectOrg"));
+      else toast.error(t("superAdmin.objects.saveError"));
     }
   };
 
@@ -356,11 +358,11 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
       onCancel={onClose}
       footer={null}
       width={1400}
-      title="Yangi obyekt yaratish"
+      title={t("superAdmin.objects.createTitle")}
       style={{ top: 10 }}
     >
       <Input
-        placeholder="Obyekt nomi"
+        placeholder={t("superAdmin.objects.objectName")}
         value={objectName}
         onChange={(e) => setObjectName(e.target.value)}
       />
@@ -370,20 +372,20 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
           type={objectType === "MAP" ? "primary" : "default"}
           onClick={() => setObjectType("MAP")}
         >
-          MAP
+          {t("superAdmin.objects.map")}
         </Button>
         <Button
           type={objectType === "IMAGE" ? "primary" : "default"}
           onClick={() => setObjectType("IMAGE")}
         >
-          IMAGE
+          {t("superAdmin.objects.imageType")}
         </Button>
       </div>
 
       {/* Select */}
       <div className="mt-4 mb-4">
         <Select
-          placeholder="Organization (optional)"
+          placeholder={t("superAdmin.objects.organization")}
           style={{ width: 300 }}
           value={organizationId}
           onChange={setOrganizationId}
@@ -406,10 +408,10 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
               onChange={setMapType}
               style={{ width: 220 }}
             >
-              <Select.Option value="m">🗺️ Map</Select.Option>
-              <Select.Option value="s">🛰️ Satellite</Select.Option>
-              <Select.Option value="y">🌍 Hybrid</Select.Option>
-              <Select.Option value="t">⛰️ Terrain</Select.Option>
+              <Select.Option value="m">{t("superAdmin.objects.mapNormal")}</Select.Option>
+              <Select.Option value="s">{t("superAdmin.objects.mapSatellite")}</Select.Option>
+              <Select.Option value="y">{t("superAdmin.objects.mapHybrid")}</Select.Option>
+              <Select.Option value="t">{t("superAdmin.objects.mapTerrain")}</Select.Option>
             </Select>
           </div>
 
@@ -468,7 +470,7 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
             maxCount={1}
             showUploadList={false}
           >
-            <Button icon={<UploadOutlined />}>Rasm yuklash</Button>
+            <Button icon={<UploadOutlined />}>{t("superAdmin.objects.uploadImage")}</Button>
           </Upload>
 
           {image && (
@@ -516,9 +518,9 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
 
       <div className="flex justify-end gap-2 mt-4">
         <Button type="primary" onClick={handleSubmit}>
-          Create
+          {t("superAdmin.objects.create")}
         </Button>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("superAdmin.objects.cancel")}</Button>
       </div>
     </Modal>
   );

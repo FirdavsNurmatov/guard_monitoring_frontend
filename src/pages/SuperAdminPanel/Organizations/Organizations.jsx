@@ -13,9 +13,11 @@ import {
 } from "antd";
 import { instance } from "../../../config/axios-instance";
 import { formatDate } from "../../../utils/dateFormat";
+import { useTranslation } from "react-i18next";
 const { Option } = Select;
 
 const Organizations = () => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -47,7 +49,7 @@ const Organizations = () => {
       }));
     } catch (error) {
       message.error(
-        error?.response?.data?.message || "Organizationlarni olishda xatolik",
+        error?.response?.data?.message || t("superAdmin.organizations.loadError"),
       );
     } finally {
       setListLoading(false);
@@ -63,12 +65,12 @@ const Organizations = () => {
     try {
       setLoading(true);
       await instance.post("/superadmin/organization", { name: values.name });
-      message.success("Organization muvaffaqiyatli yaratildi");
+      message.success(t("superAdmin.organizations.createdSuccess"));
       form.resetFields();
       setIsFormModalOpen(false);
       fetchOrganizations(pagination.current, pagination.pageSize);
     } catch (error) {
-      message.error(error?.response?.data?.message || "Xatolik yuz berdi");
+      message.error(error?.response?.data?.message || t("superAdmin.organizations.error"));
     } finally {
       setLoading(false);
     }
@@ -83,13 +85,13 @@ const Organizations = () => {
         name: values.name,
         status: values.status,
       });
-      message.success("Organization yangilandi");
+      message.success(t("superAdmin.organizations.updatedSuccess"));
       setIsFormModalOpen(false);
       setSelectedOrg(null);
       form.resetFields();
       fetchOrganizations(pagination.current, pagination.pageSize);
     } catch (error) {
-      message.error(error?.response?.data?.message || "Xatolik yuz berdi");
+      message.error(error?.response?.data?.message || t("superAdmin.organizations.error"));
     } finally {
       setLoading(false);
     }
@@ -99,10 +101,10 @@ const Organizations = () => {
   const handleDelete = async (id) => {
     try {
       await instance.delete(`/superadmin/organization/${id}`);
-      message.success("Organization o‘chirildi");
+      message.success(t("superAdmin.organizations.deletedSuccess"));
       fetchOrganizations(pagination.current, pagination.pageSize);
     } catch (error) {
-      message.error(error?.response?.data?.message || "O‘chirishda xatolik");
+      message.error(error?.response?.data?.message || t("superAdmin.organizations.deleteError"));
     }
   };
 
@@ -112,10 +114,10 @@ const Organizations = () => {
       await instance.patch(`/superadmin/organization/${id}/status`, {
         status: "INACTIVE",
       });
-      message.success("Organization nofaollashtirildi");
+      message.success(t("superAdmin.organizations.deactivatedSuccess"));
       fetchOrganizations(pagination.current, pagination.pageSize);
     } catch (error) {
-      message.error(error?.response?.data?.message || "Xatolik yuz berdi");
+      message.error(error?.response?.data?.message || t("superAdmin.organizations.error"));
     }
   };
 
@@ -125,26 +127,26 @@ const Organizations = () => {
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 80 },
-    { title: "Organization name", dataIndex: "name", key: "name" },
+    { title: t("superAdmin.organizations.organizationName"), dataIndex: "name", key: "name" },
     {
-      title: "Created at",
+      title: t("superAdmin.organizations.createdAt"),
       dataIndex: "createdAt",
       key: "createdAt",
       render: (value) => (value ? formatDate(value, true) : "-"),
     },
     {
-      title: "Amallar",
+      title: t("superAdmin.organizations.actions"),
       key: "actions",
       render: (_, record) => (
         <Space>
           <Popconfirm
-            title="Rostdan ham o'chirmoqchimisiz?"
-            okText="Ha"
-            cancelText="Yo‘q"
+            title={t("superAdmin.organizations.confirmDelete")}
+            okText={t("common.yes")}
+            cancelText={t("common.no")}
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record.id)}
           >
-            <Button danger>O‘chirish</Button>
+            <Button danger>{t("superAdmin.organizations.delete")}</Button>
           </Popconfirm>
 
           <Button
@@ -156,7 +158,7 @@ const Organizations = () => {
               setIsFormModalOpen(true);
             }}
           >
-            Tahrirlash
+            {t("superAdmin.organizations.edit")}
           </Button>
 
           <Button
@@ -166,7 +168,7 @@ const Organizations = () => {
               setIsDetailsModalOpen(true);
             }}
           >
-            Batafsil
+            {t("superAdmin.organizations.view")}
           </Button>
 
           {record.status === "ACTIVE" && (
@@ -175,7 +177,7 @@ const Organizations = () => {
               style={{ color: "#faad14" }}
               onClick={() => handleInactive(record.id)}
             >
-              Nofaollashtirish
+              {t("superAdmin.organizations.deactivate")}
             </Button>
           )}
         </Space>
@@ -186,7 +188,7 @@ const Organizations = () => {
   return (
     <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
       {/* ➕ CREATE */}
-      <Card title="Create Organization" style={{ width: 350 }}>
+      <Card title={t("superAdmin.organizations.createTitle")} style={{ width: 350 }}>
         <Button
           type="primary"
           block
@@ -197,12 +199,12 @@ const Organizations = () => {
             setIsFormModalOpen(true);
           }}
         >
-          Create New Organization
+          {t("superAdmin.organizations.createButton")}
         </Button>
       </Card>
 
       {/* 📋 LIST */}
-      <Card title="Organizations" style={{ flex: 1 }}>
+      <Card title={t("superAdmin.organizations.title")} style={{ flex: 1 }}>
         <Table
           size="small"
           rowKey="id"
@@ -216,12 +218,12 @@ const Organizations = () => {
 
       {/* 🔹 DETAILS MODAL */}
       <Modal
-        title="Organization Details"
+        title={t("superAdmin.organizations.detailsTitle")}
         open={isDetailsModalOpen}
         onCancel={() => setIsDetailsModalOpen(false)}
         footer={[
           <Button key="close" onClick={() => setIsDetailsModalOpen(false)}>
-            Yopish
+            {t("superAdmin.organizations.close")}
           </Button>,
         ]}
       >
@@ -231,28 +233,28 @@ const Organizations = () => {
               <strong>ID:</strong> {selectedOrg.id}
             </p>
             <p>
-              <strong>Name:</strong> {selectedOrg.name}
+              <strong>{t("superAdmin.organizations.organizationName")}:</strong> {selectedOrg.name}
             </p>
             <p>
-              <strong>Status:</strong> {selectedOrg.status}
+              <strong>{t("superAdmin.organizations.status")}:</strong> {selectedOrg.status}
             </p>
             <p>
-              <strong>Created At:</strong>{" "}
+              <strong>{t("superAdmin.organizations.createdAt")}:</strong> {" "}
               {formatDate(selectedOrg.createdAt, true)}
             </p>
             <p>
-              <strong>Updated At:</strong>{" "}
+              <strong>{t("superAdmin.organizations.updatedAt")}:</strong> {" "}
               {formatDate(selectedOrg.updatedAt, true)}
             </p>
           </div>
         ) : (
-          <p>Loading...</p>
+          <p>{t("common.loading")}</p>
         )}
       </Modal>
 
       {/* 🔹 CREATE / EDIT FORM MODAL */}
       <Modal
-        title={formMode === "edit" ? "Tahrirlash" : "Create Organization"}
+        title={formMode === "edit" ? t("superAdmin.organizations.editTitle") : t("superAdmin.organizations.createTitle")}
         open={isFormModalOpen}
         onCancel={() => {
           setIsFormModalOpen(false);
@@ -266,19 +268,19 @@ const Organizations = () => {
           onFinish={formMode === "edit" ? handleEditSubmit : handleCreate}
         >
           <Form.Item
-            label="Organization name"
+            label={t("superAdmin.organizations.organizationName")}
             name="name"
             rules={[
-              { required: true, message: "Organization nomini kiriting" },
-              { min: 3, message: "Kamida 3 ta belgi bo‘lishi kerak" },
+              { required: true, message: t("superAdmin.organizations.enterName") },
+              { min: 3, message: t("superAdmin.organizations.minChars") },
             ]}
           >
-            <Input placeholder="Masalan: CityNet" />
+            <Input placeholder={t("superAdmin.organizations.placeholder")} />
           </Form.Item>
 
           {formMode === "edit" ? (
-            <Form.Item label="Status" name="status">
-              <Select placeholder="Statusni tanlang (optional)" allowClear>
+            <Form.Item label={t("superAdmin.organizations.status")} name="status">
+              <Select placeholder={t("superAdmin.organizations.selectStatus")} allowClear>
                 <Option value="ACTIVE">ACTIVE</Option>
                 <Option value="INACTIVE">INACTIVE</Option>
               </Select>
@@ -287,7 +289,7 @@ const Organizations = () => {
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={loading}>
-              {formMode === "edit" ? "Saqlash" : "Create"}
+              {formMode === "edit" ? t("superAdmin.organizations.save") : t("superAdmin.organizations.create")}
             </Button>
           </Form.Item>
         </Form>

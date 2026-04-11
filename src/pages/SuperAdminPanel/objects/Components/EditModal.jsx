@@ -2,6 +2,7 @@ import { Modal, Input, Button, InputNumber, Select } from "antd";
 import toast from "react-hot-toast";
 import MapContainerWrapper from "./MapContainerWrapper";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { instance } from "../../../../config/axios-instance";
 import { Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
@@ -10,6 +11,7 @@ import { Popconfirm } from "antd";
 const { Option } = Select;
 
 const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
+  const { t } = useTranslation();
   const [fullObject, setFullObject] = useState(null); // ✅ backend’dan keladigan full object
   const [objectName, setObjectName] = useState("");
   const [objectType, setObjectType] = useState("IMAGE");
@@ -76,9 +78,9 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       await instance.delete(`/superadmin/object/${fullObject.id}/image`);
       setPreviewImage(null);
       setFile(null);
-      toast.success("Rasm o‘chirildi");
+      toast.success(t("superAdmin.objects.imageRemoved"));
     } catch {
-      toast.error("Rasmni o‘chirishda xatolik");
+      toast.error(t("superAdmin.objects.removeImageError"));
     }
   };
 
@@ -93,7 +95,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
         location: { lat, lng },
       },
     ]);
-    toast.success("🟢 Yangi punkt qo‘shildi");
+    toast.success("🟢 " + t("superAdmin.objects.checkpointAdded"));
   };
 
   const handleChangeCheckpoint = (index, field, value) => {
@@ -126,9 +128,9 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
     try {
       if (id) await instance.delete(`/superadmin/checkpoint/${id}`);
       setCheckpoints(checkpoints.filter((data) => data.id !== id));
-      toast.success("🗑️ Punkt o‘chirildi");
+      toast.success("🗑️ " + t("superAdmin.objects.checkpointDeleted"));
     } catch (err) {
-      toast.error("❌ Punktni o‘chirishda xatolik");
+      toast.error("❌ " + t("superAdmin.objects.deleteCheckpointError"));
     }
   };
 
@@ -145,7 +147,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
         (cn, idx) => cardNumbers.indexOf(cn) !== idx,
       );
       if (duplicates.length > 0) {
-        toast.error(`❌ Duplicate card number: ${duplicates[0]}`);
+        toast.error(`❌ ` + t("superAdmin.objects.duplicateCard") + `: ${duplicates[0]}`);
         setCardNumberErrors({ [duplicates[0]]: "Duplicate" });
         return;
       }
@@ -189,27 +191,27 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
         }
       }
 
-      toast.success("✅ Obyekt yangilandi");
+      toast.success("✅ " + t("superAdmin.objects.updatedSuccess"));
       onClose();
     } catch (err) {
       const data = err?.response?.data;
 
       if (data?.cardNumber) {
         setCardNumberErrors({ [data?.cardNumber]: "Duplicate" });
-        setApiError(`${data.cardNumber} - bu karta raqami allaqachon mavjud`);
+        setApiError(`${data.cardNumber} - ` + t("superAdmin.objects.duplicateCardExists"));
       } else if (data?.message) {
         setApiError(data.message);
       } else {
-        setApiError("Noma'lum xatolik");
+        setApiError(t("superAdmin.objects.unknownError"));
       }
 
-      toast.error("❌ Yangilashda xatolik yuz berdi");
+      toast.error("❌ " + t("superAdmin.objects.updateError"));
     }
   };
 
   return (
     <Modal
-      title={`Obyektni tahrirlash: ${objectName}`}
+      title={t("superAdmin.objects.editTitle") + `: ${objectName}`}
       open={open}
       onCancel={onClose}
       footer={null}
@@ -218,7 +220,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
     >
       <div className="mb-4">
         <Input
-          placeholder="Obyekt nomi"
+          placeholder={t("superAdmin.objects.objectName")}
           value={objectName}
           onChange={(e) => setObjectName(e.target.value)}
         />
@@ -236,20 +238,20 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               showUploadList={false}
             >
               <Button icon={<UploadOutlined />}>
-                {previewImage ? "Rasmni almashtirish" : "Rasm yuklash"}
+                {previewImage ? t("superAdmin.objects.replaceImage") : t("superAdmin.objects.uploadImage")}
               </Button>
             </Upload>
 
             {previewImage && (
               <Popconfirm
-                title="Rasmni o‘chirmoqchimisiz?"
-                description="Bu amalni ortga qaytarib bo‘lmaydi"
+                title={t("superAdmin.objects.confirmRemoveImage")}
+                description={t("superAdmin.objects.removeImageWarning")}
                 onConfirm={handleRemoveImage}
-                okText="Ha"
-                cancelText="Yo‘q"
+                okText={t("common.yes")}
+                cancelText={t("common.no")}
                 okButtonProps={{ danger: true }}
               >
-                <Button danger>🗑️ Rasmni o‘chirish</Button>
+                <Button danger>🗑️ {t("superAdmin.objects.removeImage")}</Button>
               </Popconfirm>
             )}
           </div>
@@ -293,7 +295,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
       {objectType === "MAP" && (
         <>
           <div className="flex items-center gap-3 mb-4">
-            <span>Zoom:</span>
+            <span>{t("superAdmin.objects.zoom")}:</span>
             <InputNumber
               min={0}
               max={18}
@@ -305,10 +307,10 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               onChange={setMapType}
               style={{ width: 180 }}
             >
-              <Option value="m">🛣️ Oddiy</Option>
-              <Option value="s">🛰️ Sun'iy yo'ldosh</Option>
-              <Option value="y">🌍 Aralash</Option>
-              <Option value="p">⛰️ Relyef</Option>
+              <Option value="m">{t("superAdmin.objects.mapNormal")}</Option>
+              <Option value="s">{t("superAdmin.objects.mapSatellite")}</Option>
+              <Option value="y">{t("superAdmin.objects.mapHybrid")}</Option>
+              <Option value="p">{t("superAdmin.objects.mapTerrain")}</Option>
             </Select>
           </div>
           <MapContainerWrapper
@@ -318,7 +320,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
             modalOpen={open}
             setZoom={setZoom}
             mapType={mapType}
-            onObjectMove={(newPos) => setObjectPosition(newPos)} // 🆕 Obyektni surish funksiyasi
+            onObjectMove={(newPos) => setObjectPosition(newPos)} // Obyektni surish funksiyasi
             onAddCheckpoint={(lat, lng, index) => {
               if (index !== undefined) {
                 // Checkpoint pozitsiyasini yangilash
@@ -339,7 +341,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                     location: { lat, lng },
                   },
                 ]);
-                toast.success("🟢 Yangi punkt qo‘shildi");
+                toast.success("🟢 " + t("superAdmin.objects.checkpointAdded"));
               }
             }}
           />
@@ -357,7 +359,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               className="flex flex-wrap gap-3 items-center border p-2 rounded"
             >
               <Input
-                placeholder="Checkpoint name"
+                placeholder={t("superAdmin.objects.checkpointName")}
                 value={cp.name}
                 onChange={(e) =>
                   handleChangeCheckpoint(i, "name", e.target.value)
@@ -379,7 +381,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                 style={{ width: "120px" }}
               />
               <Input
-                placeholder="Card number"
+                placeholder={t("superAdmin.objects.cardNumber")}
                 value={cp.cardNumber}
                 onChange={(e) =>
                   handleChangeCheckpoint(i, "cardNumber", e.target.value)
@@ -389,14 +391,14 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
               />
 
               <Select
-                value={cp.infoStyle || "TOP"} // ✅ default enum qiymati
+                value={cp.infoStyle || "TOP"}
                 onChange={(val) => handleChangeCheckpoint(i, "infoStyle", val)}
                 style={{ width: 120 }}
               >
-                <Option value="TOP">Yuqorida</Option>
-                <Option value="RIGHT">O'ngda</Option>
-                <Option value="BOTTOM">Pastda</Option>
-                <Option value="LEFT">Chapda</Option>
+                <Option value="TOP">{t("superAdmin.objects.styleTop")}</Option>
+                <Option value="RIGHT">{t("superAdmin.objects.styleRight")}</Option>
+                <Option value="BOTTOM">{t("superAdmin.objects.styleBottom")}</Option>
+                <Option value="LEFT">{t("superAdmin.objects.styleLeft")}</Option>
               </Select>
 
               <InputNumber
@@ -435,7 +437,7 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                   setCheckpoints(checkpoints.filter((_, idx) => idx !== i));
                 }}
               >
-                O'chirish
+                {t("superAdmin.objects.delete")}
               </Button>
             </div>
           ))}
@@ -454,9 +456,9 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
 
         <div className="mt-4 flex gap-3">
           <Button type="primary" onClick={handleUpdate}>
-            Saqlash
+            {t("superAdmin.objects.save")}
           </Button>
-          <Button onClick={onClose}>Bekor qilish</Button>
+          <Button onClick={onClose}>{t("superAdmin.objects.cancel")}</Button>
         </div>
       </div>
     </Modal>

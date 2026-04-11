@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Table, Space, Button, Popconfirm } from "antd";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import { instance } from "../../../config/axios-instance";
 import CreateModal from "./Components/CreateModal";
@@ -8,6 +9,7 @@ import EditModal from "./Components/EditModal";
 import ViewModal from "./Components/ViewModal";
 
 const Objects = () => {
+  const { t } = useTranslation();
   const [objects, setObjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +24,7 @@ const Objects = () => {
       const { data } = await instance.get("/superadmin/objects");
       setObjects(data?.data || []);
     } catch (err) {
-      toast.error("❌ Obyektlarni yuklashda xatolik yuz berdi");
+      toast.error("❌ " + t("superAdmin.objects.loadError"));
     } finally {
       setLoading(false);
     }
@@ -36,16 +38,16 @@ const Objects = () => {
   const handleDelete = async (id) => {
     try {
       await instance.delete(`/superadmin/object/${id}`);
-      toast.success("🗑️ Obyekt muvaffaqiyatli o‘chirildi");
+      toast.success("🗑️ " + t("superAdmin.objects.deletedSuccess"));
       fetchObjects();
     } catch (err) {
-      toast.error("❌ Obyektni o‘chirishda xatolik yuz berdi");
+      toast.error("❌ " + t("superAdmin.objects.deleteError"));
     }
   };
 
   const columns = [
     {
-      title: "Rasm",
+      title: t("superAdmin.objects.image"),
       render: (_, record) =>
         record?.imageUrl ? (
           <img
@@ -53,11 +55,11 @@ const Objects = () => {
             alt="Obyekt rasmi"
             className="max-w-16"
           />
-        ) : 'Obyekt rasmi mavjud emas',
+        ) : t("superAdmin.objects.noImage"),
     },
-    { title: "Nomi", dataIndex: "name" },
+    { title: t("superAdmin.objects.name"), dataIndex: "name" },
     {
-      title: "Amallar",
+      title: t("superAdmin.objects.actions"),
       render: (_, record) => (
         <Space>
           <Button
@@ -66,7 +68,7 @@ const Objects = () => {
               setIsViewModalOpen(true);
             }}
           >
-            Ko‘rish
+            {t("superAdmin.objects.view")}
           </Button>
           <Button
             type="primary"
@@ -75,16 +77,16 @@ const Objects = () => {
               setIsEditModalOpen(true);
             }}
           >
-            Tahrirlash
+            {t("superAdmin.objects.edit")}
           </Button>
           <Popconfirm
-            title="Rostdan ham o'chirmoqchimisiz?"
-            okText="Ha"
-            cancelText="Yo‘q"
+            title={t("superAdmin.objects.confirmDelete")}
+            okText={t("common.yes")}
+            cancelText={t("common.no")}
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record.id)}
           >
-            <Button danger>O‘chirish</Button>
+            <Button danger>{t("superAdmin.objects.delete")}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -95,7 +97,7 @@ const Objects = () => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <Button type="primary" onClick={() => setIsCreateModalOpen(true)}>
-          Yangi obyekt yaratish
+          {t("superAdmin.objects.createButton")}
         </Button>
       </div>
 
@@ -104,7 +106,7 @@ const Objects = () => {
         columns={columns}
         rowKey="id"
         loading={loading}
-        locale={{ emptyText: "Hech qanday obyekt topilmadi" }}
+        locale={{ emptyText: t("superAdmin.objects.emptyText") }}
       />
 
       {/* CREATE MODAL */}
