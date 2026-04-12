@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Tooltip } from "react-leaflet";
 import { useTranslation } from "react-i18next";
-import { formatTime } from "../utils/dateFormat";
+import { formatTime } from "../../utils/dateFormat";
 
 export const CheckpointMarker = React.memo(function CheckpointMarker({
   cp,

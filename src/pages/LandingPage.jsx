@@ -9,79 +9,117 @@ import {
   Smartphone,
   Wifi,
   Activity,
-  X,
   LogIn,
+  Send,
+  Mail,
+  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useState } from "react";
+import { Modal } from "antd";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup,
+} from "react-leaflet";
 import L from "leaflet";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "../components/LanguageSwitcher";
+import LanguageSwitcher from "../components/common/LanguageSwitcher";
+import { CheckpointMarker } from "../components/map/CheckpointMarker";
 
-const defaultIcon = new L.Icon({
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+const invisibleIcon = L.divIcon({
+  className: "",
+  html: `<div style="width:0;height:0;"></div>`,
+  iconSize: [0, 0],
 });
 
-const guardMarkers = [
+// Mock GPS tracking data - crosses checkpoint 1 and checkpoint 2
+const mockGpsPoints = [
+  [41.2995, 69.2401], // Checkpoint 1
+  [41.3005, 69.238],
+  [41.3015, 69.235],
+  [41.302, 69.23],
+  [41.3031, 69.2272], // Checkpoint 2
+  [41.304, 69.229],
+  [41.305, 69.231],
+];
+
+const checkpoints = [
   {
     id: 1,
-    lat: 41.2995,
-    lng: 69.2401,
-    name: "Guard 1",
-    status: "active",
-    image: "/GuardMeasure.jpeg",
+    nameKey: "landing.checkpoints.checkpoint1",
+    location: { lat: 41.2995, lng: 69.2401 },
+    normalTime: 5,
+    passTime: 2,
+    infoStyle: "TOP",
   },
   {
     id: 2,
-    lat: 41.3031,
-    lng: 69.2272,
-    name: "Guard 2",
-    status: "active",
-    image: "/GuardMeasure.jpeg",
+    nameKey: "landing.checkpoints.checkpoint2",
+    location: { lat: 41.3031, lng: 69.2272 },
+    normalTime: 5,
+    passTime: 2,
+    infoStyle: "LEFT",
   },
   {
     id: 3,
-    lat: 41.297,
-    lng: 69.2432,
-    name: "Guard 3",
-    status: "inactive",
-    image: "/GuardMeasure.jpeg",
+    nameKey: "landing.checkpoints.checkpoint3",
+    location: { lat: 41.297, lng: 69.2432 },
+    normalTime: 10,
+    passTime: 3,
+    infoStyle: "BOTTOM",
   },
   {
     id: 4,
-    lat: 41.3062,
-    lng: 69.2359,
-    name: "Guard 4",
-    status: "active",
-    image: "/GuardMeasure.jpeg",
+    nameKey: "landing.checkpoints.checkpoint4",
+    location: { lat: 41.3062, lng: 69.2359 },
+    normalTime: 8,
+    passTime: 2,
+    infoStyle: "TOP",
   },
   {
     id: 5,
-    lat: 41.294,
-    lng: 69.25,
-    name: "Guard 5",
-    status: "active",
-    image: "/GuardMeasure.jpeg",
+    nameKey: "landing.checkpoints.checkpoint5",
+    location: { lat: 41.294, lng: 69.25 },
+    normalTime: 6,
+    passTime: 2,
+    infoStyle: "TOP",
   },
 ];
 
+const mockLatestLogs = {
+  1: {
+    createdAtRaw: Date.now() - 5 * 60 * 1000,
+    guardKey: "landing.guards.guard1",
+    status: "MISSED",
+  },
+  2: {
+    createdAtRaw: Date.now() - 3 * 60 * 1000,
+    guardKey: "landing.guards.guard2",
+    status: "ON_TIME",
+  },
+  3: {
+    createdAtRaw: Date.now() - 15 * 60 * 1000,
+    guardKey: "landing.guards.guard3",
+    status: "LATE",
+  },
+  4: {
+    createdAtRaw: Date.now() - 2 * 60 * 1000,
+    guardKey: "landing.guards.guard4",
+    status: "ON_TIME",
+  },
+  5: {
+    createdAtRaw: Date.now() - 8 * 60 * 1000,
+    guardKey: "landing.guards.guard5",
+    status: "ON_TIME",
+  },
+};
+
 function App() {
   const { t } = useTranslation();
-  const [scrollY, setScrollY] = useState(0);
-  const [selectedGuard, setSelectedGuard] = useState(null);
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [viewType, setViewType] = useState("MAP");
 
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-hidden">
@@ -96,17 +134,20 @@ function App() {
               <LanguageSwitcher />
             </div>
             <div className="flex flex-col xl:flex-row xl:items-center gap-3">
-            <a
-              href="/login"
-              className="px-6 py-2 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 rounded-lg font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2"
-            >
-              <LogIn className="w-4 h-4" />
-              {t("common.login")}
-            </a>
+              <a
+                href="/login"
+                className="px-6 py-2 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 rounded-lg font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                {t("common.login")}
+              </a>
 
-            <button className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/50">
-              {t("landing.requestDemo")}
-            </button>
+              <button
+                onClick={() => setDemoModalOpen(true)}
+                className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 cursor-pointer rounded-lg font-semibold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/50"
+              >
+                {t("landing.requestDemo")}
+              </button>
             </div>
           </div>
         </div>
@@ -131,10 +172,6 @@ function App() {
             <p className="text-xl text-gray-400">
               {t("landing.trackEveryMove")}
             </p>
-            <button className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold text-lg transition-all hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/50 flex items-center gap-2 group">
-              {t("landing.requestDemo")}
-              <Activity className="w-5 h-5 group-hover:animate-pulse" />
-            </button>
           </div>
 
           <div className="relative">
@@ -264,21 +301,27 @@ function App() {
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gray-900 p-6 rounded-xl border border-gray-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400">{t("landing.activeGuards")}</span>
+                    <span className="text-gray-400">
+                      {t("landing.activeGuards")}
+                    </span>
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                   </div>
                   <div className="text-3xl font-bold text-emerald-400">12</div>
                 </div>
                 <div className="bg-gray-900 p-6 rounded-xl border border-gray-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400">{t("landing.todayChecks")}</span>
+                    <span className="text-gray-400">
+                      {t("landing.todayChecks")}
+                    </span>
                     <Check className="w-5 h-5 text-blue-400" />
                   </div>
                   <div className="text-3xl font-bold text-blue-400">248</div>
                 </div>
                 <div className="bg-gray-900 p-6 rounded-xl border border-red-900/50">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400">{t("landing.missedPoints")}</span>
+                    <span className="text-gray-400">
+                      {t("landing.missedPoints")}
+                    </span>
                     <Bell className="w-5 h-5 text-red-400 animate-pulse" />
                   </div>
                   <div className="text-3xl font-bold text-red-400">3</div>
@@ -287,170 +330,203 @@ function App() {
 
               <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
-                  <div
-                    className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden"
-                    style={{ height: "400px" }}
-                  >
-                    <MapContainer
-                      center={[41.3031, 69.2272]}
-                      zoom={14}
-                      style={{ height: "100%", width: "100%" }}
-                      className="rounded-xl"
-                      attributionControl={false}
-                    >
-                      <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution="&copy; OpenStreetMap contributors"
-                      />
-                      {guardMarkers.map((guard) => (
-                        <Marker
-                          key={guard.id}
-                          position={[guard.lat, guard.lng]}
-                          icon={defaultIcon}
-                          eventHandlers={{
-                            click: () => setSelectedGuard(guard.id),
-                          }}
-                        >
-                          <Popup>
-                            <div className="text-sm">
-                              <p className="font-semibold">{guard.name}</p>
-                              <p
-                                className={`text-xs ${guard.status === "active" ? "text-green-600" : "text-red-600"}`}
-                              >
-                                {guard.status === "active" ? t("common.active") : t("common.inactive")}
-                              </p>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                    </MapContainer>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Map className="w-5 h-5 text-emerald-400" />
+                      {t("landing.liveMap")}
+                    </h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setViewType("MAP")}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          viewType === "MAP"
+                            ? "bg-emerald-500 text-white"
+                            : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                        }`}
+                      >
+                        {t("dashboardPage.map")}
+                      </button>
+                      <button
+                        onClick={() => setViewType("IMAGE")}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          viewType === "IMAGE"
+                            ? "bg-emerald-500 text-white"
+                            : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                        }`}
+                      >
+                        {t("dashboardPage.image")}
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-                    <h3 className="font-semibold mb-4">{t("landing.checkHistory")}</h3>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          time: "14:32",
-                          guard: "Guard 1",
-                          location: "Kirish 1",
-                          status: "success",
-                        },
-                        {
-                          time: "14:28",
-                          guard: "Guard 4",
-                          location: "Xona 5",
-                          status: "success",
-                        },
-                        {
-                          time: "14:15",
-                          guard: "Guard 2",
-                          location: "Kirish 2",
-                          status: "warning",
-                        },
-                        {
-                          time: "14:02",
-                          guard: "Guard 5",
-                          location: "Xona 3",
-                          status: "success",
-                        },
-                      ].map((log, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-2 h-2 rounded-full ${log.status === "success" ? "bg-emerald-400" : "bg-yellow-400"}`}
-                            ></div>
-                            <div className="text-sm">
-                              <p className="text-gray-300">
-                                {log.guard} - {log.location}
-                              </p>
-                              <p className="text-gray-500 text-xs">
-                                {log.time}
-                              </p>
-                            </div>
-                          </div>
-                          <Camera className="w-4 h-4 text-gray-400" />
-                        </div>
-                      ))}
-                    </div>
+                  <div
+                    className="bg-gray-900 text-black rounded-xl border border-gray-700 overflow-hidden relative"
+                    style={{ height: "400px" }}
+                  >
+                    {viewType === "IMAGE" ? (
+                      <div className="relative h-full w-full">
+                        <img
+                          src="/GuardMonitoringLandingPage.png"
+                          alt="Guard Monitoring"
+                          className="h-full w-full object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0"></div>
+                        {checkpoints.map((cp) => {
+                          const latestLog = mockLatestLogs[cp.id];
+                          const checkpointWithTranslatedName = {
+                            ...cp,
+                            name: t(cp.nameKey),
+                          };
+                          const logWithTranslatedGuard = latestLog
+                            ? {
+                                ...latestLog,
+                                guard: t(latestLog.guardKey),
+                              }
+                            : null;
+
+                          return (
+                            <CheckpointMarker
+                              key={cp.id}
+                              cp={checkpointWithTranslatedName}
+                              latestLog={logWithTranslatedGuard}
+                              direction={cp?.infoStyle}
+                              objectType="IMAGE"
+                              style={{
+                                top: `${25 + cp.id * 10}%`,
+                                left: `${15 + cp.id * 14}%`,
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <MapContainer
+                        center={[41.3031, 69.2372]}
+                        zoom={14}
+                        style={{ height: "100%", width: "100%" }}
+                        className="rounded-xl"
+                        attributionControl={false}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution="&copy; OpenStreetMap contributors"
+                        />
+
+                        {mockGpsPoints.length > 0 && (
+                          <>
+                            <Polyline
+                              positions={mockGpsPoints}
+                              color="#3b82f6"
+                              weight={4}
+                              opacity={0.8}
+                            />
+                            <Marker
+                              position={mockGpsPoints[mockGpsPoints.length - 1]}
+                              icon={L.divIcon({
+                                className: "",
+                                html: `<div style="
+                                width:12px;
+                                height:12px;
+                                background-color:#22c55e;
+                                border:2px solid white;
+                                border-radius:50%;
+                                box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+                              "></div>`,
+                              })}
+                            >
+                              <Popup>
+                                <div className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                                  {t("landing.guards.guard2")}
+                                </div>
+                              </Popup>
+                            </Marker>
+                          </>
+                        )}
+
+                        {checkpoints.map((cp) => {
+                          if (!cp.location?.lat || !cp.location?.lng)
+                            return null;
+
+                          const latestLog = mockLatestLogs[cp.id];
+                          const checkpointWithTranslatedName = {
+                            ...cp,
+                            name: t(cp.nameKey),
+                          };
+                          const logWithTranslatedGuard = latestLog
+                            ? {
+                                ...latestLog,
+                                guard: t(latestLog.guardKey),
+                              }
+                            : null;
+
+                          return (
+                            <Marker
+                              key={cp.id}
+                              position={[cp.location?.lat, cp.location?.lng]}
+                              icon={invisibleIcon}
+                            >
+                              <CheckpointMarker
+                                cp={checkpointWithTranslatedName}
+                                latestLog={logWithTranslatedGuard}
+                                direction={cp?.infoStyle}
+                                objectType="MAP"
+                              />
+                            </Marker>
+                          );
+                        })}
+                      </MapContainer>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-700">
-                      <h3 className="font-semibold flex items-center gap-2">
-                        <Camera className="w-5 h-5 text-emerald-400" />
-                        {t("landing.viewGuards")}
-                      </h3>
-                    </div>
-                    <div className="max-h-[500px] overflow-y-auto">
-                      {guardMarkers.map((guard) => (
-                        <div
-                          key={guard.id}
-                          onClick={() => setSelectedGuard(guard.id)}
-                          className={`p-4 border-b border-gray-800 cursor-pointer transition-all ${
-                            selectedGuard === guard.id
-                              ? "bg-emerald-500/20 border-l-2 border-l-emerald-400"
-                              : "hover:bg-gray-800"
-                          }`}
-                        >
-                          <div className="flex gap-3 items-start">
-                            <img
-                              src={guard.image}
-                              alt={guard.name}
-                              className="w-12 h-12 rounded-lg object-cover"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm">
-                                {guard.name}
-                              </p>
-                              <p
-                                className={`text-xs ${guard.status === "active" ? "text-emerald-400" : "text-red-400"}`}
-                              >
-                                {guard.status === "active" ? t("common.active") : t("common.inactive")}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {t("landing.time")}: 14:32
-                              </p>
-                            </div>
-                            <div
-                              className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${guard.status === "active" ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`}
-                            ></div>
-                          </div>
-                        </div>
-                      ))}
+                  <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <Camera className="w-5 h-5 text-emerald-400" />
+                      {t("landing.statusLegend.title")}
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                        <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-sm text-gray-300">
+                          {t("landing.statusLegend.onTime")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                        <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
+                        <span className="text-sm text-gray-300">
+                          {t("landing.statusLegend.late")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                        <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                        <span className="text-sm text-gray-300">
+                          {t("landing.statusLegend.missed")}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {selectedGuard && (
-                    <div className="bg-gray-900 rounded-xl border border-emerald-500/30 overflow-hidden">
-                      <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-                        <h3 className="font-semibold">{t("landing.livePhotos")}</h3>
-                        <button
-                          onClick={() => setSelectedGuard(null)}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                  <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <Map className="w-5 h-5 text-blue-400" />
+                      {t("landing.gpsLegend.title")}
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                        <div className="w-8 h-1 bg-blue-500 rounded"></div>
+                        <span className="text-sm text-gray-300">
+                          {t("landing.gpsLegend.path")}
+                        </span>
                       </div>
-                      <div className="p-4 space-y-3">
-                        <div className="relative group">
-                          <img
-                            src="/GuardMeasure.jpeg"
-                            alt="Foto 1"
-                            className="w-full h-32 rounded-lg object-cover border border-gray-700 group-hover:border-emerald-400/50 transition-all"
-                          />
-                          <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-xs text-gray-300">
-                            14:32
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                        <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white"></div>
+                        <span className="text-sm text-gray-300">
+                          {t("landing.gpsLegend.current")}
+                        </span>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -520,10 +596,6 @@ function App() {
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
             {t("landing.modernMonitoringDesc")}
           </p>
-          <button className="px-10 py-5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold text-lg transition-all hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/50 inline-flex items-center gap-3 group">
-            {t("landing.getDemo")}
-            <Clock className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-          </button>
         </div>
       </section>
 
@@ -534,12 +606,116 @@ function App() {
               <Shield className="w-8 h-8 text-emerald-400" />
               <span className="text-xl font-bold">Guard Monitoring</span>
             </div>
-            <p className="text-gray-400">
-              {t("landing.copyright")}
-            </p>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.linkedin.com/in/firdavsnurmatov/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors"
+              >
+                <span className="font-bold text-sm">in</span>
+                <span className="text-sm">LinkedIn</span>
+              </a>
+              <a
+                href="https://t.me/FirdavsNurmatov_404"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                <span className="text-sm">Telegram</span>
+              </a>
+              <a
+                href="mailto:nurmatovfirdavs96@gmail.com"
+                className="flex items-center gap-2 text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="text-sm">Email</span>
+              </a>
+            </div>
+            <p className="text-gray-400">{t("landing.copyright")}</p>
           </div>
         </div>
       </footer>
+
+      <Modal
+        open={demoModalOpen}
+        onCancel={() => setDemoModalOpen(false)}
+        footer={null}
+        centered
+        width={500}
+        closeIcon={
+          <button className="w-8 h-8 bg-emerald-500 hover:bg-emerald-500 cursor-pointer rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-emerald-500/50">
+            <X className="w-4 h-4 text-gray-900 hover:text-white" />
+          </button>
+        }
+        styles={{
+          body: { background: "#1a1a2e", padding: "36px" },
+          content: {
+            backgroundColor: "#1a1a2e",
+            borderRadius: "20px",
+            border: "none",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          },
+        }}
+      >
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl shadow-emerald-500/30">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text">
+            {t("landing.requestDemo")}
+          </h3>
+          <p className="text-gray-400">{t("landing.contactDescription")}</p>
+        </div>
+
+        <div className="space-y-4">
+          <a
+            href="https://www.linkedin.com/in/firdavsnurmatov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-5 bg-gray-800/50 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/30 rounded-2xl transition-all duration-300 group transform hover:scale-105 border border-gray-700 hover:border-emerald-500"
+          >
+            <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/30 transition-all duration-300">
+              <span className="text-emerald-400 font-bold text-2xl group-hover:text-white transition-colors">
+                in
+              </span>
+            </div>
+            <span className="text-white font-semibold text-lg group-hover:text-white">
+              LinkedIn
+            </span>
+            <Activity className="w-5 h-5 text-emerald-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+          </a>
+
+          <a
+            href="https://t.me/FirdavsNurmatov_404"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-5 bg-gray-800/50 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/30 rounded-2xl transition-all duration-300 group transform hover:scale-105 border border-gray-700 hover:border-blue-500"
+          >
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-all duration-300">
+              <Send className="w-6 h-6 text-blue-400 group-hover:text-white transition-colors" />
+            </div>
+            <span className="text-white font-semibold text-lg group-hover:text-white">
+              Telegram
+            </span>
+            <Activity className="w-5 h-5 text-blue-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+          </a>
+
+          <a
+            href="mailto:nurmatovfirdavs96@gmail.com"
+            className="flex items-center gap-4 p-5 bg-gray-800/50 hover:bg-purple-500 hover:shadow-lg hover:shadow-purple-500/30 rounded-2xl transition-all duration-300 group transform hover:scale-105 border border-gray-700 hover:border-purple-500"
+          >
+            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-all duration-300">
+              <Mail className="w-6 h-6 text-purple-400 group-hover:text-white transition-colors" />
+            </div>
+            <span className="text-white font-semibold text-lg group-hover:text-white">
+              Email
+            </span>
+            <Activity className="w-5 h-5 text-purple-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+          </a>
+        </div>
+      </Modal>
     </div>
   );
 }

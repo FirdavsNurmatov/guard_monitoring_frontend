@@ -5,9 +5,9 @@ import Dashboard from "./pages/AdminPanel/Dashboard";
 import User from "./pages/AdminPanel/users/Users";
 import Journal from "./pages/AdminPanel/journal/Journal";
 import Organizations from "./pages/SuperAdminPanel/Organizations/Organizations";
-import SuperAdminLayout from "./components/SuperAdminLayout";
-import MainLayout from "./components/MainLayout";
-import RoleChecker from "./components/RoleChecker";
+import SuperAdminLayout from "./components/layout/SuperAdminLayout";
+import RoleChecker from "./components/common/RoleChecker";
+import MainLayout from "./components/layout/MainLayout";
 import Objects from "./pages/SuperAdminPanel/objects/Objects";
 import Users from "./pages/SuperAdminPanel/Users/Users";
 

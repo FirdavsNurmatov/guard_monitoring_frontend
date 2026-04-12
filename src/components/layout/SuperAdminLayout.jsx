@@ -9,7 +9,7 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "./LanguageSwitcher";
+import LanguageSwitcher from "../common/LanguageSwitcher";
 
 const { Header, Sider, Content } = Layout;
 

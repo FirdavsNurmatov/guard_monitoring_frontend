@@ -5,7 +5,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "../components/LanguageSwitcher";
+import LanguageSwitcher from "../components/common/LanguageSwitcher";
 
 export default function Login() {
   const { t } = useTranslation();

@@ -152,7 +152,39 @@
     "viewGuards": "Қоровулларни Кўриш",
     "time": "Вақти",
     "livePhotos": "Жонли Фотосуратлар",
-    "copyright": "© 2025 Guard Monitoring. Барча ҳуқуқлар ҳимояланган."
+    "copyright": "© 2025 Guard Monitoring. Барча ҳуқуқлар ҳимояланган.",
+    "checkpoints": {
+      "checkpoint1": "Кириш 1",
+      "checkpoint2": "Кириш 2",
+      "checkpoint3": "Хона 5",
+      "checkpoint4": "Хона 3",
+      "checkpoint5": "Бошқа"
+    },
+    "guards": {
+      "guard1": "Қоровул 1",
+      "guard2": "Қоровул 2",
+      "guard3": "Қоровул 3",
+      "guard4": "Қоровул 4",
+      "guard5": "Қоровул 5"
+    },
+    "statusLegend": {
+      "title": "Статус Изоҳлари",
+      "onTime": "Вақтида келган - Яшил ранг",
+      "late": "Кечикиб келган - Сариқ ранг",
+      "missed": "Ўтказиб юборилган - Қизил ранг"
+    },
+    "socialMedia": {
+      "linkedin": "LinkedIn",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "contactDescription": "Биз билан қуйидаки платформалар орқали боғланишингиз мумкин",
+    "liveMap": "Жонли Харита",
+    "gpsLegend": {
+      "title": "GPS Изоҳлари",
+      "path": "Йўл - Кўк ранг",
+      "current": "Ҳозирги жой - Яшил ранг"
+    }
   },
   "dashboardPage": {
     "live": "Жонли",

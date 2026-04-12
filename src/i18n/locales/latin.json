@@ -167,7 +167,39 @@
     "viewGuards": "Qorovullarni Ko'rish",
     "time": "Vaqti",
     "livePhotos": "Live Fotosuratlar",
-    "copyright": "© 2025 Guard Monitoring. Barcha huquqlar himoyalangan."
+    "copyright": "© 2025 Guard Monitoring. Barcha huquqlar himoyalangan.",
+    "checkpoints": {
+      "checkpoint1": "Kirish 1",
+      "checkpoint2": "Kirish 2",
+      "checkpoint3": "Xona 5",
+      "checkpoint4": "Xona 3",
+      "checkpoint5": "Boshqa"
+    },
+    "guards": {
+      "guard1": "Qorovul 1",
+      "guard2": "Qorovul 2",
+      "guard3": "Qorovul 3",
+      "guard4": "Qorovul 4",
+      "guard5": "Qorovul 5"
+    },
+    "statusLegend": {
+      "title": "Status Izohlari",
+      "onTime": "Vaqtida kelgan - Yashil rang",
+      "late": "Kechikib kelgan - Sariq rang",
+      "missed": "O'tkazib yuborilgan - Qizil rang"
+    },
+    "socialMedia": {
+      "linkedin": "LinkedIn",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "contactDescription": "Biz bilan quyidagi platformalar orqali bog'lanishingiz mumkin",
+    "liveMap": "Jonli Xarita",
+    "gpsLegend": {
+      "title": "GPS Izohlari",
+      "path": "Yo'l - Ko'k rang",
+      "current": "Hozirgi joy - Yashil rang"
+    }
   },
   "dashboardPage": {
     "live": "Live",

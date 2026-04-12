@@ -152,7 +152,39 @@
     "viewGuards": "Просмотр охранников",
     "time": "Время",
     "livePhotos": "Фото в реальном времени",
-    "copyright": "© 2025 Guard Monitoring. Все права защищены."
+    "copyright": "© 2025 Guard Monitoring. Все права защищены.",
+    "checkpoints": {
+      "checkpoint1": "Вход 1",
+      "checkpoint2": "Вход 2",
+      "checkpoint3": "Комната 5",
+      "checkpoint4": "Комната 3",
+      "checkpoint5": "Другое"
+    },
+    "guards": {
+      "guard1": "Охранник 1",
+      "guard2": "Охранник 2",
+      "guard3": "Охранник 3",
+      "guard4": "Охранник 4",
+      "guard5": "Охранник 5"
+    },
+    "statusLegend": {
+      "title": "Описание статусов",
+      "onTime": "Пришел вовремя - Зеленый цвет",
+      "late": "Опоздал - Желтый цвет",
+      "missed": "Пропустил - Красный цвет"
+    },
+    "socialMedia": {
+      "linkedin": "LinkedIn",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "contactDescription": "Вы можете связаться с нами через следующие платформы",
+    "liveMap": "Карта в реальном времени",
+    "gpsLegend": {
+      "title": "Описание GPS",
+      "path": "Путь - Синий цвет",
+      "current": "Текущее местоположение - Зеленый цвет"
+    }
   },
   "dashboardPage": {
     "live": "Live",

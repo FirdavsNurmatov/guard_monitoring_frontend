@@ -1,6 +1,6 @@
 import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { useAuthStore } from "../store/useAuthStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const RoleChecker = ({ roles, children }) => {
   const { user } = useAuthStore((store) => store);

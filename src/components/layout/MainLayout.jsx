@@ -9,8 +9,11 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "./LanguageSwitcher";
+import LanguageSwitcher from "../common/LanguageSwitcher";
 import { Shield } from "lucide-react";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useObjectStore } from "../../store/useObjectStore";
+import i18n from "../../i18n/config";
 
 const { Header, Sider, Content } = Layout;
 
@@ -21,6 +24,8 @@ export default function MainLayout() {
 
   const navigate = useNavigate();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const resetAuth = useAuthStore((state) => state.resetAuth);
+  const resetObjectSettings = useObjectStore((state) => state.resetObjectSettings);
 
   const selectedKey = (() => {
     if (location.pathname.startsWith("/admin/users")) return "1";
@@ -128,7 +133,12 @@ export default function MainLayout() {
         }
         open={logoutOpen}
         onOk={() => {
+          resetAuth();
+          resetObjectSettings();
+          i18n.changeLanguage('latin');
           localStorage.removeItem("auth");
+          localStorage.removeItem("i18nextLng");
+          document.cookie = "i18next=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           navigate("/", { replace: true });
         }}
         onCancel={() => setLogoutOpen(false)}

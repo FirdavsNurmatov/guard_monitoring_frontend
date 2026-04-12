@@ -24,13 +24,12 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'latin',
     fallbackLng: 'latin',
-    
+
     interpolation: {
       escapeValue: false
     },
-    
+
     detection: {
       order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
       caches: ['localStorage', 'cookie'],

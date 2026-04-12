@@ -1,21 +1,17 @@
-import { CheckpointMarker } from "../../components/CheckpointMarker";
-import LanguageSwitcher from "../../components/LanguageSwitcher";
+import LanguageSwitcher from "../../components/common/LanguageSwitcher";
+import MapView from "../../components/dashboard/MapView";
+import JournalModal from "../../components/dashboard/JournalModal";
 import { instance } from "../../config/axios-instance";
 import { createSocket } from "../../config/socket";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useObjectStore } from "../../store/useObjectStore";
-import { formatDate, formatTime } from "../../utils/dateFormat";
-import { useEffect, useRef, useState, useMemo } from "react";
-import { Table, Button, Modal, Select } from "antd";
+import { useNotificationHandler } from "../../hooks/useNotificationHandler.jsx";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { Button, Select } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import Noty from "noty";
-import "noty/lib/noty.css";
-import "noty/src/themes/metroui.scss";
 import { Shield, Image, FileText, Map, LayoutDashboard } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Pulse animation for live indicator
@@ -25,12 +21,6 @@ const LiveIndicator = () => (
     <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
   </span>
 );
-
-const invisibleIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:0;height:0;"></div>`,
-  iconSize: [0, 0],
-});
 
 const { Option } = Select;
 
@@ -72,6 +62,36 @@ export default function Dashboard() {
 
   const audioRef = useRef(null);
 
+  const handleLogReceived = useCallback((formattedLog, log) => {
+    setLogs((prev) => [formattedLog, ...prev].slice(0, 50));
+
+    setGuards((prev) => {
+      const index = prev.findIndex((g) => g.guardId === log.userId);
+      if (index >= 0) {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          checkpointName: log.checkpoint?.name,
+          status: log.status,
+        };
+        return updated;
+      } else {
+        return [
+          ...prev,
+          {
+            guardId: log.userId,
+            login: log.user?.username,
+            username: log.user?.username,
+            checkpointName: log.checkpoint?.name,
+            status: log.status,
+          },
+        ];
+      }
+    });
+  }, []);
+
+  useNotificationHandler(socket, selectedMap, i18n, t, handleLogReceived);
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -89,7 +109,7 @@ export default function Dashboard() {
     };
   }, []);
 
-  const toggleFullscreen = async () => {
+  const toggleFullscreen = useCallback(async () => {
     if (!mapWrapperRef.current) return;
 
     if (!document.fullscreenElement) {
@@ -97,61 +117,19 @@ export default function Dashboard() {
     } else {
       await document.exitFullscreen();
     }
-  };
+  }, []);
 
-  const fetchAllMaps = async () => {
+  const fetchAllMaps = useCallback(async () => {
     try {
       const res = await instance.get("/object");
       setMaps(res.data || []);
     } catch (err) {
       toast.error(t("dashboardPage.loadObjectsError"));
     }
-  };
-
-  const handleSelectMap = async (id) => {
-    setLoading(true);
-    setSelectedMapId(id); // Store ga saqlash
-    try {
-      const res = await instance.get(`/object/${id}`);
-      setSelectedMap({
-        ...res.data,
-        imageUrl: `${baseUrl}${res.data.imageUrl}`,
-      });
-      await fetchInitialLogs(id);
-    } catch (err) {
-      toast.error(t("dashboardPage.loadObjectError"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // JournalLogs
-  useEffect(() => {
-    if (!journal) return; // modal yopiq bo‘lsa fetch bo‘lmaydi
-
-    const fetchLogs = async () => {
-      const res = await instance.get(
-        `/admin/monitoringLogs?objectId=${selectedMap.id}&page=${page}&limit=30`,
-      );
-      const data = res?.data?.items || [];
-
-      const formattedJournalLogs = data.map((log) => ({
-        id: log.id,
-        guard: log.user?.username || log.user?.login,
-        checkpoint: log.checkpoint?.name || "-",
-        createdAtRaw: new Date(log.createdAt),
-        status: log.status,
-      }));
-
-      setJournalLogs(formattedJournalLogs);
-      setTotal(res?.data?.total || 0); // pagination uchun total
-    };
-
-    fetchLogs();
-  }, [journal, page]);
+  }, [t]);
 
   // 🟢 Loglarni olish
-  const fetchInitialLogs = async (objectId) => {
+  const fetchInitialLogs = useCallback(async (objectId) => {
     try {
       const res = await instance.get(
         `/admin/logs?limit=50&objectId=${objectId}`,
@@ -189,7 +167,49 @@ export default function Dashboard() {
     } catch {
       toast.error(t("dashboardPage.loadLogsError"));
     }
-  };
+  }, [t]);
+
+  const handleSelectMap = useCallback(async (id) => {
+    setLoading(true);
+    setSelectedMapId(id); // Store ga saqlash
+    try {
+      const res = await instance.get(`/object/${id}`);
+      setSelectedMap({
+        ...res.data,
+        imageUrl: `${baseUrl}${res.data.imageUrl}`,
+      });
+      await fetchInitialLogs(id);
+    } catch (err) {
+      toast.error(t("dashboardPage.loadObjectError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [baseUrl, fetchInitialLogs, t]);
+
+  // JournalLogs
+  useEffect(() => {
+    if (!journal) return; // modal yopiq bo‘lsa fetch bo‘lmaydi
+
+    const fetchLogs = async () => {
+      const res = await instance.get(
+        `/admin/monitoringLogs?objectId=${selectedMap.id}&page=${page}&limit=30`,
+      );
+      const data = res?.data?.items || [];
+
+      const formattedJournalLogs = data.map((log) => ({
+        id: log.id,
+        guard: log.user?.username || log.user?.login,
+        checkpoint: log.checkpoint?.name || "-",
+        createdAtRaw: new Date(log.createdAt),
+        status: log.status,
+      }));
+
+      setJournalLogs(formattedJournalLogs);
+      setTotal(res?.data?.total || 0); // pagination uchun total
+    };
+
+    fetchLogs();
+  }, [journal, page]);
 
   useEffect(() => {
     // Socket ulanishini yaratish
@@ -229,150 +249,33 @@ export default function Dashboard() {
   }, [maps, selectedMapId]); // 🟢 selectedMapId ni ham qo'shish
 
   useEffect(() => {
-    audioRef.current = new Audio("/sound-example.wav");
-    audioRef.current.preload = "auto";
-  }, []);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleLog = (log) => {
-      if (log?.checkpoint?.objectId !== selectedMap?.id) return;
-
-      const formattedLog = {
-        id: log.id,
-        guard: log.user?.username || log.user?.login,
-        checkpoint: log.checkpoint?.name || "-",
-        status: log.status,
-        createdAt: new Date(log.createdAt).toLocaleTimeString(),
-        createdAtRaw: new Date(log.createdAt),
-        zoneId: log.checkpoint?.id,
-        userId: log.userId,
-        xPercent: log.checkpoint?.xPercent,
-        yPercent: log.checkpoint?.yPercent,
-      };
-
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((err) => {
-        console.log("Audio blocked:", err);
-      });
-
-      new Noty({
-        text: `<b>${formattedLog.guard}</b> - ${formattedLog.checkpoint}`,
-        type:
-          formattedLog.status === "ON_TIME"
-            ? "success"
-            : formattedLog.status === "LATE"
-              ? "warning"
-              : "error",
-        layout: "topRight",
-        timeout: 4000,
-      }).show();
-
-      // 🧩 logs update
-      setLogs((prev) => [formattedLog, ...prev].slice(0, 50));
-
-      // 🧩 guards update
-      setGuards((prev) => {
-        const index = prev.findIndex((g) => g.guardId === log.userId);
-        if (index >= 0) {
-          const updated = [...prev];
-          updated[index] = {
-            ...updated[index],
-            checkpointName: log.checkpoint?.name,
-            status: log.status,
-          };
-          return updated;
-        } else {
-          return [
-            ...prev,
-            {
-              guardId: log.userId,
-              login: log.user?.username,
-              username: log.user?.username,
-              checkpointName: log.checkpoint?.name,
-              status: log.status,
-            },
-          ];
-        }
-      });
-    };
-
-    socket.on("connect", () => {
-      console.log("✅ Connected", socket.id);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("❌ Connection error:", err.message);
-    });
-
-    socket.on("logs", handleLog);
-
-    return () => {
-      socket.off("logs", handleLog);
-    };
-  }, [selectedMap?.id, socket]); // 🧩 faqat obyekt o‘zgarganda yangilanadi
+    toast.dismiss();
+  }, [i18n.language]);
 
   // 🛰️ GPS real-time yangilanishlar
+  const handleGps = useCallback(async (msg) => {
+    // Masalan: msg = "gps:3"
+    if (!msg.startsWith("gps:")) return;
+
+    const userId = msg.split(":")[1];
+    try {
+      const res = await instance.get(`/admin/gps/${userId}?limit=20`);
+      const points = res.data.map((p) => [p.location?.lat, p.location?.lng]);
+      setGpsPoints(points);
+    } catch (err) {
+      toast.error(t("dashboardPage.loadGpsError"));
+    }
+  }, [t]);
+
   useEffect(() => {
     if (!socket) return;
-
-    const handleGps = async (msg) => {
-      // Masalan: msg = "gps:3"
-      if (!msg.startsWith("gps:")) return;
-
-      const userId = msg.split(":")[1];
-      try {
-        const res = await instance.get(`/admin/gps/${userId}?limit=20`);
-        const points = res.data.map((p) => [p.location?.lat, p.location?.lng]);
-        setGpsPoints(points);
-      } catch (err) {
-        toast.error(t("dashboardPage.loadGpsError"));
-      }
-    };
 
     socket.on("gps", handleGps);
 
     return () => {
       socket.off("gps", handleGps);
     };
-  }, [socket]);
-
-  const journalLogColumns = [
-    {
-      title: "#",
-      dataIndex: "id",
-      key: "id",
-      width: 80,
-    },
-    {
-      title: t("dashboardPage.username"),
-      dataIndex: "guard",
-      key: "guard",
-    },
-    {
-      title: t("dashboardPage.checkpointName"),
-      dataIndex: "checkpoint",
-      key: "checkpoint",
-    },
-    {
-      title: t("dashboardPage.arrivalDate"),
-      dataIndex: "createdAtRaw",
-      render: (time) => `${formatDate(time)} ${formatTime(time)}`,
-      key: "createdAt",
-    },
-    {
-      title: t("dashboardPage.status"),
-      dataIndex: "status",
-      render: (status) =>
-        status === "ON_TIME"
-          ? t("dashboardPage.onTimeStatus")
-          : status === "LATE"
-            ? t("dashboardPage.lateStatus")
-            : t("dashboardPage.veryLateStatus"),
-      key: "status",
-    },
-  ];
+  }, [socket, handleGps]);
 
   // 🔥 Eng so‘nggi loglarni zoneId bo‘yicha map qilib olamiz
   const latestLogsByZone = useMemo(() => {
@@ -388,6 +291,16 @@ export default function Dashboard() {
 
     return map;
   }, [logs]);
+
+  // 📊 Stats calculations
+  const stats = useMemo(() => {
+    return {
+      guardsCount: guards.length,
+      onTimeCount: logs.filter((l) => l.status === "ON_TIME").length,
+      lateCount: logs.filter((l) => l.status === "LATE" || l.status === "VERY_LATE").length,
+      lastLogTime: logs[0]?.createdAt?.split(",")[1]?.trim() || "--:--",
+    };
+  }, [guards, logs]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-950 overflow-hidden">
@@ -494,27 +407,17 @@ export default function Dashboard() {
               <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-700/50 text-xs">
                 <span className="text-gray-400">
                   {t("dashboardPage.guards")}:{" "}
-                  <b className="text-white">{guards.length}</b>
+                  <b className="text-white">{stats.guardsCount}</b>
                 </span>
                 <span className="text-gray-400">
                   {t("dashboardPage.onTime")}:{" "}
-                  <b className="text-emerald-400">
-                    {logs.filter((l) => l.status === "ON_TIME").length}
-                  </b>
+                  <b className="text-emerald-400">{stats.onTimeCount}</b>
                 </span>
                 <span className="text-gray-400">
                   {t("dashboardPage.late")}:{" "}
-                  <b className="text-amber-400">
-                    {
-                      logs.filter(
-                        (l) => l.status === "LATE" || l.status === "VERY_LATE",
-                      ).length
-                    }
-                  </b>
+                  <b className="text-amber-400">{stats.lateCount}</b>
                 </span>
-                <span className="ml-auto text-gray-500">
-                  {logs[0]?.createdAt?.split(",")[1]?.trim() || "--:--"}
-                </span>
+                <span className="ml-auto text-gray-500">{stats.lastLogTime}</span>
               </div>
             )}
           </div>
@@ -523,191 +426,28 @@ export default function Dashboard() {
 
       {!loading && selectedMap && (
         <>
-          {selectedMap && (
-            <div
-              ref={mapWrapperRef}
-              className={`relative ${
-                isFullscreen ? "h-screen w-screen" : "h-94/100 w-99/100 m-auto"
-              } border border-gray-700/50 rounded-xl overflow-hidden shadow-lg shadow-black/20`}
-            >
-              {objectType === "IMAGE" ? (
-                <>
-                  <img
-                    src={selectedMap.imageUrl}
-                    alt={selectedMap.name}
-                    className="h-full w-full"
-                  />
+          <MapView
+            ref={mapWrapperRef}
+            selectedMap={selectedMap}
+            objectType={objectType}
+            mapType={mapType}
+            setMapType={setMapType}
+            latestLogsByZone={latestLogsByZone}
+            gpsPoints={gpsPoints}
+            isFullscreen={isFullscreen}
+            toggleFullscreen={toggleFullscreen}
+            t={t}
+          />
 
-                  {selectedMap.checkpoints?.map((cp) => {
-                    const latestLog = latestLogsByZone[cp.id];
-
-                    return (
-                      <CheckpointMarker
-                        key={cp.id}
-                        cp={cp}
-                        latestLog={latestLog}
-                        direction={cp?.infoStyle}
-                        style={{
-                          top: `${cp.position?.yPercent || 0}%`,
-                          left: `${cp.position?.xPercent || 0}%`,
-                        }}
-                      />
-                    );
-                  })}
-                </>
-              ) : (
-                objectType === "MAP" && (
-                  <>
-                    {/* 🧭 Xarita turi tanlash */}
-                    <div
-                      className="absolute top-3 left-15 z-[1000] bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-2"
-                      style={{ fontSize: "14px" }}
-                    >
-                      <span className="font-medium text-gray-200">
-                        {t("dashboardPage.mapType")}:
-                      </span>
-                      <Select
-                        size="small"
-                        value={mapType}
-                        onChange={(val) => setMapType(val)}
-                        className="select-green"
-                        style={{ width: 160 }}
-                      >
-                        <Option value="m">
-                          🛣️ {t("dashboardPage.mapNormal")}
-                        </Option>
-                        <Option value="s">
-                          🛰️ {t("dashboardPage.mapSatellite")}
-                        </Option>
-                        <Option value="y">
-                          🌍 {t("dashboardPage.mapHybrid")}
-                        </Option>
-                        <Option value="p">
-                          ⛰️ {t("dashboardPage.mapTerrain")}
-                        </Option>
-                      </Select>
-                    </div>
-                    <div
-                      className="absolute top-3 right-5 z-[1000] bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-2"
-                      style={{ fontSize: "14px" }}
-                    >
-                      <Button
-                        onClick={toggleFullscreen}
-                        className="btn-primary-green"
-                      >
-                        {isFullscreen
-                          ? t("dashboardPage.exitFullscreen")
-                          : t("dashboardPage.fullscreen")}
-                      </Button>
-                    </div>
-
-                    <MapContainer
-                      center={selectedMap.position || [41, 61]}
-                      zoom={selectedMap.zoom || 15}
-                      scrollWheelZoom={true}
-                      style={{ height: "100%", width: "100%" }}
-                      attributionControl={false}
-                    >
-                      <TileLayer
-                        url={`https://{s}.google.com/vt/lyrs=${mapType}&x={x}&y={y}&z={z}`}
-                        subdomains={["mt0", "mt1", "mt2", "mt3"]}
-                        attribution="© Google Maps"
-                      />
-
-                      {selectedMap.checkpoints?.map((cp) => {
-                        if (!cp.location?.lat || !cp.location?.lng) return null;
-
-                        const latestLog = latestLogsByZone[cp.id];
-
-                        return (
-                          <Marker
-                            key={cp.id}
-                            position={[cp.location?.lat, cp.location?.lng]}
-                            icon={invisibleIcon}
-                          >
-                            <CheckpointMarker
-                              cp={cp}
-                              latestLog={latestLog}
-                              direction={cp?.infoStyle}
-                              objectType="MAP"
-                            />
-                          </Marker>
-                        );
-                      })}
-
-                      {gpsPoints.length > 0 && (
-                        <>
-                          <Polyline
-                            positions={gpsPoints}
-                            color="blue"
-                            weight={4}
-                          />
-                          {/* 🔹 So‘nggi nuqtada kichik yashil doira */}
-                          <Marker
-                            position={gpsPoints[gpsPoints.length - 1]}
-                            icon={L.divIcon({
-                              className: "",
-                              html: `<div style="
-                                width:10px;
-                                height:10px;
-                                background-color:green;
-                                border:2px solid black;
-                                border-radius:50%;
-                              "></div>`,
-                            })}
-                          />
-                        </>
-                      )}
-                    </MapContainer>
-                  </>
-                )
-              )}
-            </div>
-          )}
-
-          {/* Journal Modal */}
-          <Modal
-            title={
-              <span className="text-white">
-                {t("dashboardPage.employeeJournal")}
-              </span>
-            }
+          <JournalModal
             open={journal}
             onCancel={() => setJournal(false)}
-            footer={null}
-            width="70vw"
-            style={{ top: 20 }}
-            className="dark-modal"
-            styles={{
-              content: { backgroundColor: "#111827", borderRadius: "1rem" },
-              header: {
-                backgroundColor: "#111827",
-                borderBottom: "1px solid #374151",
-              },
-            }}
-          >
-            <Table
-              size="small"
-              dataSource={journalLogs.map((l, i) => ({
-                ...l,
-                key: i,
-                id: (page - 1) * 50 + (i + 1),
-              }))}
-              columns={journalLogColumns}
-              pagination={{
-                current: page,
-                pageSize: 50,
-                total: total,
-                showSizeChanger: false,
-                onChange: (p) => setPage(p),
-                showTotal: (total) => `${t("dashboardPage.total")}: ${total}`,
-                className: "dark-pagination",
-              }}
-              scroll={{ y: 500 }}
-              className="dark-table table-compact"
-              rowClassName={() => "dark-table-row"}
-            />
-          </Modal>
+            journalLogs={journalLogs}
+            page={page}
+            setPage={setPage}
+            total={total}
+            t={t}
+          />
         </>
       )}
     </div>
