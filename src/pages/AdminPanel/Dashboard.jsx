@@ -1,28 +1,22 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import { Typography, Table, Button, Modal, Select } from "antd";
 import { CheckpointMarker } from "../../components/CheckpointMarker";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { instance } from "../../config/axios-instance";
 import { createSocket } from "../../config/socket";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useObjectStore } from "../../store/useObjectStore";
+import { formatDate, formatTime } from "../../utils/dateFormat";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Table, Button, Modal, Select } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import Noty from "noty";
 import "noty/lib/noty.css";
 import "noty/src/themes/metroui.scss";
+import { Shield, Image, FileText, Map, LayoutDashboard } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import {
-  Shield,
-  Image,
-  Users,
-  FileText,
-  Map,
-  LayoutDashboard,
-} from "lucide-react";
-import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 // Pulse animation for live indicator
 const LiveIndicator = () => (
@@ -38,14 +32,18 @@ const invisibleIcon = L.divIcon({
   iconSize: [0, 0],
 });
 
-const { Title } = Typography;
 const { Option } = Select;
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
 
   // Get current locale based on language
-  const currentLocale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+  const currentLocale =
+    i18n.language === "uz"
+      ? "uz-UZ"
+      : i18n.language === "ru"
+        ? "ru-RU"
+        : "en-US";
   const [socket, setSocket] = useState(null);
   const [maps, setMaps] = useState([]); // 🔹 barcha obyektlar
   const [selectedMap, setSelectedMap] = useState(null); // 🔹 tanlangan obyekt
@@ -56,7 +54,6 @@ export default function Dashboard() {
   const [journal, setJournal] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [showTables, setShowTables] = useState(false);
   const [gpsPoints, setGpsPoints] = useState([]);
   const mapWrapperRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -64,13 +61,13 @@ export default function Dashboard() {
   const baseUrl = import.meta.env.VITE_SERVER_PORT;
   const navigate = useNavigate();
   const { user } = useAuthStore((store) => store);
-  const { 
-    selectedMapId, 
-    mapType, 
-    objectType, 
-    setSelectedMapId, 
-    setMapType, 
-    setObjectType 
+  const {
+    selectedMapId,
+    mapType,
+    objectType,
+    setSelectedMapId,
+    setMapType,
+    setObjectType,
   } = useObjectStore((store) => store);
 
   const audioRef = useRef(null);
@@ -107,7 +104,7 @@ export default function Dashboard() {
       const res = await instance.get("/object");
       setMaps(res.data || []);
     } catch (err) {
-      toast.error(t('dashboardPage.loadObjectsError'));
+      toast.error(t("dashboardPage.loadObjectsError"));
     }
   };
 
@@ -122,7 +119,7 @@ export default function Dashboard() {
       });
       await fetchInitialLogs(id);
     } catch (err) {
-      toast.error(t('dashboardPage.loadObjectError'));
+      toast.error(t("dashboardPage.loadObjectError"));
     } finally {
       setLoading(false);
     }
@@ -190,7 +187,7 @@ export default function Dashboard() {
 
       setGuards(guardsArr);
     } catch {
-      toast.error(t('dashboardPage.loadLogsError'));
+      toast.error(t("dashboardPage.loadLogsError"));
     }
   };
 
@@ -330,7 +327,7 @@ export default function Dashboard() {
         const points = res.data.map((p) => [p.location?.lat, p.location?.lng]);
         setGpsPoints(points);
       } catch (err) {
-        toast.error(t('dashboardPage.loadGpsError'));
+        toast.error(t("dashboardPage.loadGpsError"));
       }
     };
 
@@ -341,27 +338,6 @@ export default function Dashboard() {
     };
   }, [socket]);
 
-  const guardColumns = [
-    { title: t('dashboardPage.login'), dataIndex: "login", key: "login" },
-    { title: t('dashboardPage.username'), dataIndex: "username", key: "username" },
-    {
-      title: t('dashboardPage.checkpoint'),
-      dataIndex: "checkpointName",
-      key: "checkpointName",
-    },
-    {
-      title: t('dashboardPage.status'),
-      dataIndex: "status",
-      key: "status",
-      render: (status) =>
-        status === "ON_TIME"
-          ? t('dashboardPage.onTimeStatus')
-          : status === "LATE"
-            ? t('dashboardPage.lateStatus')
-            : t('dashboardPage.veryLateStatus'),
-    },
-  ];
-
   const journalLogColumns = [
     {
       title: "#",
@@ -370,63 +346,31 @@ export default function Dashboard() {
       width: 80,
     },
     {
-      title: t('dashboardPage.username'),
+      title: t("dashboardPage.username"),
       dataIndex: "guard",
       key: "guard",
     },
-    { title: t('dashboardPage.checkpointName'), dataIndex: "checkpoint", key: "checkpoint" },
     {
-      title: t('dashboardPage.arrivalDate'),
+      title: t("dashboardPage.checkpointName"),
+      dataIndex: "checkpoint",
+      key: "checkpoint",
+    },
+    {
+      title: t("dashboardPage.arrivalDate"),
       dataIndex: "createdAtRaw",
-      render: (time) =>
-        new Date(time).toLocaleTimeString(currentLocale, {
-          year: "numeric",
-          month: "numeric",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+      render: (time) => `${formatDate(time)} ${formatTime(time)}`,
       key: "createdAt",
     },
     {
-      title: t('dashboardPage.status'),
+      title: t("dashboardPage.status"),
       dataIndex: "status",
       render: (status) =>
         status === "ON_TIME"
-          ? t('dashboardPage.onTimeStatus')
+          ? t("dashboardPage.onTimeStatus")
           : status === "LATE"
-            ? t('dashboardPage.lateStatus')
-            : t('dashboardPage.veryLateStatus'),
+            ? t("dashboardPage.lateStatus")
+            : t("dashboardPage.veryLateStatus"),
       key: "status",
-    },
-  ];
-
-  const logColumns = [
-    { title: t('dashboardPage.username'), dataIndex: "guard", key: "guard" },
-    { title: t('dashboardPage.checkpoint'), dataIndex: "checkpoint", key: "checkpoint" },
-    {
-      title: t('dashboardPage.status'),
-      dataIndex: "status",
-      key: "status",
-      render: (status) =>
-        status === "ON_TIME"
-          ? t('dashboardPage.onTimeStatus')
-          : status === "LATE"
-            ? t('dashboardPage.lateStatus')
-            : t('dashboardPage.veryLateStatus'),
-    },
-    {
-      title: t('dashboardPage.time'),
-      dataIndex: "createdAtRaw",
-      render: (time) =>
-        new Date(time).toLocaleTimeString(currentLocale, {
-          year: "numeric",
-          month: "numeric",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      key: "createdAt",
     },
   ];
 
@@ -442,204 +386,220 @@ export default function Dashboard() {
       }
     }
 
-  return map;
-}, [logs]);
+    return map;
+  }, [logs]);
 
-return (
-  <div className="h-screen flex flex-col bg-gray-950 overflow-hidden">
-    <header className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-lg shadow-black/20 z-50 flex-shrink-0">
-      <div className="px-4 py-2">
-        <div>
-          <div className="flex items-center justify-between">
-            {/* Left */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                <LayoutDashboard className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">
-                  {selectedMap?.name || "Monitoring"}
-                </h1>
-                <div className="flex items-center text-xs text-emerald-400">
-                  <LiveIndicator />
-                  <span>{t('dashboardPage.live')}</span>
+  return (
+    <div className="h-screen flex flex-col bg-gray-950 overflow-hidden">
+      <header className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-lg shadow-black/20 z-50 flex-shrink-0">
+        <div className="px-4 py-2">
+          <div>
+            <div className="flex items-center justify-between">
+              {/* Left */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <LayoutDashboard className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">
+                    {selectedMap?.name || "Monitoring"}
+                  </h1>
+                  <div className="flex items-center text-xs text-emerald-400">
+                    <LiveIndicator />
+                    <span>{t("dashboardPage.live")}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Center */}
-            <div className="flex items-center gap-2">
-              <div className="flex bg-gray-800 rounded-lg p-0.5">
-                <Button
-                  type={objectType === "IMAGE" ? "primary" : "text"}
-                  onClick={() => setObjectType("IMAGE")}
+              {/* Center */}
+              <div className="flex items-center gap-2">
+                <div className="flex bg-gray-800 rounded-lg p-0.5">
+                  <Button
+                    type={objectType === "IMAGE" ? "primary" : "text"}
+                    onClick={() => setObjectType("IMAGE")}
+                    size="medium"
+                    icon={<Image className="w-3.5 h-3.5" />}
+                    className={
+                      objectType === "IMAGE"
+                        ? "btn-primary-green"
+                        : "text-gray-300 hover:text-white"
+                    }
+                  >
+                    {t("dashboardPage.image")}
+                  </Button>
+                  <Button
+                    type={objectType === "MAP" ? "primary" : "text"}
+                    onClick={() => setObjectType("MAP")}
+                    className={
+                      objectType === "MAP"
+                        ? "btn-primary-green"
+                        : "text-gray-300 hover:text-white"
+                    }
+                    size="medium"
+                    icon={<Map className="w-3.5 h-3.5" />}
+                  >
+                    {t("dashboardPage.map")}
+                  </Button>
+                </div>
+
+                <Select
                   size="medium"
-                  icon={<Image className="w-3.5 h-3.5" />}
-                  className={objectType === "IMAGE" ? "btn-primary-green" : "text-gray-300 hover:text-white"}
+                  placeholder={t("dashboardPage.object")}
+                  value={selectedMapId || selectedMap?.id}
+                  className="select-green"
+                  style={{ width: 160 }}
+                  onChange={(id) => {
+                    const map = maps.find((m) => m.id === id);
+                    setSelectedMap(map);
+                    handleSelectMap(id);
+                  }}
                 >
-                  {t('dashboardPage.image')}
-                </Button>
-                <Button
-                  type={objectType === "MAP" ? "primary" : "text"}
-                  onClick={() => setObjectType("MAP")}
-                  className={objectType === "MAP" ? "btn-primary-green" : "text-gray-300 hover:text-white"}
-                  size="medium"
-                  icon={<Map className="w-3.5 h-3.5" />}
-                >
-                  {t('dashboardPage.map')}
-                </Button>
+                  {maps.map((item) => (
+                    <Option key={item.id} value={item.id}>
+                      {item.name}
+                    </Option>
+                  ))}
+                </Select>
               </div>
 
-              <Select
-                size="medium"
-                placeholder={t('dashboardPage.object')}
-                value={selectedMapId || selectedMap?.id}
-                className="select-green"
-                style={{ width: 160 }}
-                onChange={(id) => {
-                  const map = maps.find((m) => m.id === id);
-                  setSelectedMap(map);
-                  handleSelectMap(id);
-                }}
-              >
-                {maps.map((item) => (
-                  <Option key={item.id} value={item.id}>
-                    {item.name}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Right */}
-            <div className="flex items-center gap-1">
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1 mr-2">
-                <LanguageSwitcher />
-              </div>
-              <Button
-                size="medium"
-                type="primary"
-                icon={<FileText className="w-3.5 h-3.5" />}
-                onClick={() => setJournal(true)}
-                className="btn-primary-green"
-              >
-                {t('dashboardPage.journal')}
-              </Button>
-              {/* <Button
-                size="medium"
-                icon={<Users className="w-3.5 h-3.5" />}
-                onClick={() => setShowTables(true)}
-                className="btn-primary-green"
-              >
-                {t('dashboardPage.details')}
-              </Button> */}
-              {user?.role === "ADMIN" && (
+              {/* Right */}
+              <div className="flex items-center gap-1">
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1 mr-2">
+                  <LanguageSwitcher />
+                </div>
                 <Button
                   size="medium"
-                  icon={<Shield className="w-3.5 h-3.5" />}
-                  onClick={() => navigate("/admin")}
+                  type="primary"
+                  icon={<FileText className="w-3.5 h-3.5" />}
+                  onClick={() => setJournal(true)}
                   className="btn-primary-green"
                 >
-                  {t('dashboardPage.admin')}
+                  {t("dashboardPage.journal")}
                 </Button>
-              )}
+                {user?.role === "ADMIN" && (
+                  <Button
+                    size="medium"
+                    icon={<Shield className="w-3.5 h-3.5" />}
+                    onClick={() => navigate("/admin")}
+                    className="btn-primary-green"
+                  >
+                    {t("dashboardPage.admin")}
+                  </Button>
+                )}
+              </div>
             </div>
+
+            {/* Stats */}
+            {!loading && selectedMap && (
+              <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-700/50 text-xs">
+                <span className="text-gray-400">
+                  {t("dashboardPage.guards")}:{" "}
+                  <b className="text-white">{guards.length}</b>
+                </span>
+                <span className="text-gray-400">
+                  {t("dashboardPage.onTime")}:{" "}
+                  <b className="text-emerald-400">
+                    {logs.filter((l) => l.status === "ON_TIME").length}
+                  </b>
+                </span>
+                <span className="text-gray-400">
+                  {t("dashboardPage.late")}:{" "}
+                  <b className="text-amber-400">
+                    {
+                      logs.filter(
+                        (l) => l.status === "LATE" || l.status === "VERY_LATE",
+                      ).length
+                    }
+                  </b>
+                </span>
+                <span className="ml-auto text-gray-500">
+                  {logs[0]?.createdAt?.split(",")[1]?.trim() || "--:--"}
+                </span>
+              </div>
+            )}
           </div>
-
-          {/* Stats */}
-          {!loading && selectedMap && (
-            <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-700/50 text-xs">
-              <span className="text-gray-400">
-                {t('dashboardPage.guards')}: <b className="text-white">{guards.length}</b>
-              </span>
-              <span className="text-gray-400">
-                {t('dashboardPage.onTime')}:{" "}
-                <b className="text-emerald-400">
-                  {logs.filter((l) => l.status === "ON_TIME").length}
-                </b>
-              </span>
-              <span className="text-gray-400">
-                {t('dashboardPage.late')}:{" "}
-                <b className="text-amber-400">
-                  {
-                    logs.filter(
-                      (l) => l.status === "LATE" || l.status === "VERY_LATE",
-                    ).length
-                  }
-                </b>
-              </span>
-              <span className="ml-auto text-gray-500">
-                {logs[0]?.createdAt?.split(",")[1]?.trim() || "--:--"}
-              </span>
-            </div>
-          )}
         </div>
-      </div>
-    </header>
+      </header>
 
-    {!loading && selectedMap && (
-      <>
-        {selectedMap && (
-          <div
-            ref={mapWrapperRef}
-            className={`relative ${
-              isFullscreen ? "h-screen w-screen" : "h-94/100 w-99/100 m-auto"
-            } border border-gray-700/50 rounded-xl overflow-hidden shadow-lg shadow-black/20`}
-          >
-            {objectType === "IMAGE" ? (
-              <>
-                <img
-                  src={selectedMap.imageUrl}
-                  alt={selectedMap.name}
-                  className="h-full w-full"
-                />
-
-                {selectedMap.checkpoints?.map((cp) => {
-                  const latestLog = latestLogsByZone[cp.id];
-
-                  return (
-                    <CheckpointMarker
-                      key={cp.id}
-                      cp={cp}
-                      latestLog={latestLog}
-                      direction={cp?.infoStyle}
-                      style={{
-                        top: `${cp.position?.yPercent || 0}%`,
-                        left: `${cp.position?.xPercent || 0}%`,
-                      }}
-                    />
-                  );
-                })}
-              </>
-            ) : (
-              objectType === "MAP" && (
+      {!loading && selectedMap && (
+        <>
+          {selectedMap && (
+            <div
+              ref={mapWrapperRef}
+              className={`relative ${
+                isFullscreen ? "h-screen w-screen" : "h-94/100 w-99/100 m-auto"
+              } border border-gray-700/50 rounded-xl overflow-hidden shadow-lg shadow-black/20`}
+            >
+              {objectType === "IMAGE" ? (
                 <>
-                  {/* 🧭 Xarita turi tanlash */}
-                  <div
-                    className="absolute top-3 left-15 z-[1000] bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-2"
-                    style={{ fontSize: "14px" }}
-                  >
-                    <span className="font-medium text-gray-200">{t('dashboardPage.mapType')}:</span>
-                    <Select
-                      size="small"
-                      value={mapType}
-                      onChange={(val) => setMapType(val)}
-                      className="select-green"
-                      style={{ width: 160 }}
+                  <img
+                    src={selectedMap.imageUrl}
+                    alt={selectedMap.name}
+                    className="h-full w-full"
+                  />
+
+                  {selectedMap.checkpoints?.map((cp) => {
+                    const latestLog = latestLogsByZone[cp.id];
+
+                    return (
+                      <CheckpointMarker
+                        key={cp.id}
+                        cp={cp}
+                        latestLog={latestLog}
+                        direction={cp?.infoStyle}
+                        style={{
+                          top: `${cp.position?.yPercent || 0}%`,
+                          left: `${cp.position?.xPercent || 0}%`,
+                        }}
+                      />
+                    );
+                  })}
+                </>
+              ) : (
+                objectType === "MAP" && (
+                  <>
+                    {/* 🧭 Xarita turi tanlash */}
+                    <div
+                      className="absolute top-3 left-15 z-[1000] bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-2"
+                      style={{ fontSize: "14px" }}
                     >
-                      <Option value="m">🛣️ {t('dashboardPage.mapNormal')}</Option>
-                      <Option value="s">🛰️ {t('dashboardPage.mapSatellite')}</Option>
-                      <Option value="y">🌍 {t('dashboardPage.mapHybrid')}</Option>
-                      <Option value="p">⛰️ {t('dashboardPage.mapTerrain')}</Option>
-                    </Select>
-                  </div>
-                  <div
-                    className="absolute top-3 right-5 z-[1000] bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-2"
-                    style={{ fontSize: "14px" }}
-                  >
-                    <Button onClick={toggleFullscreen} className="btn-primary-green">
-                      {isFullscreen ? t('dashboardPage.exitFullscreen') : t('dashboardPage.fullscreen')}
-                    </Button>
-                  </div>
+                      <span className="font-medium text-gray-200">
+                        {t("dashboardPage.mapType")}:
+                      </span>
+                      <Select
+                        size="small"
+                        value={mapType}
+                        onChange={(val) => setMapType(val)}
+                        className="select-green"
+                        style={{ width: 160 }}
+                      >
+                        <Option value="m">
+                          🛣️ {t("dashboardPage.mapNormal")}
+                        </Option>
+                        <Option value="s">
+                          🛰️ {t("dashboardPage.mapSatellite")}
+                        </Option>
+                        <Option value="y">
+                          🌍 {t("dashboardPage.mapHybrid")}
+                        </Option>
+                        <Option value="p">
+                          ⛰️ {t("dashboardPage.mapTerrain")}
+                        </Option>
+                      </Select>
+                    </div>
+                    <div
+                      className="absolute top-3 right-5 z-[1000] bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-2"
+                      style={{ fontSize: "14px" }}
+                    >
+                      <Button
+                        onClick={toggleFullscreen}
+                        className="btn-primary-green"
+                      >
+                        {isFullscreen
+                          ? t("dashboardPage.exitFullscreen")
+                          : t("dashboardPage.fullscreen")}
+                      </Button>
+                    </div>
 
                     <MapContainer
                       center={selectedMap.position || [41, 61]}
@@ -705,54 +665,26 @@ return (
             </div>
           )}
 
-          {/* Tafsilotlar Modal */}
-          <Modal
-            title={<span className="text-white">{t('dashboardPage.details')}</span>}
-            open={showTables}
-            onCancel={() => setShowTables(false)}
-            footer={null}
-            width="90vw"
-            className="dark-modal"
-            styles={{ content: { backgroundColor: '#111827', borderRadius: '1rem' }, header: { backgroundColor: '#111827', borderBottom: '1px solid #374151' } }}
-          >
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-                <Title level={4} className="text-white mb-3">{t('dashboardPage.recentLogs')}</Title>
-                <Table
-                  dataSource={logs.map((l, i) => ({ ...l, key: i }))}
-                  columns={logColumns}
-                  pagination={false}
-                  scroll={{ y: 400 }}
-                  className="dark-table"
-                  size="small"
-                  rowClassName={() => "dark-table-row"}
-                />
-              </div>
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-                <Title level={4} className="text-white mb-3">{t('dashboardPage.guardList')}</Title>
-                <Table
-                  dataSource={guards.map((g, i) => ({ ...g, key: i }))}
-                  columns={guardColumns}
-                  pagination={false}
-                  scroll={{ y: 400 }}
-                  className="dark-table"
-                  size="small"
-                  rowClassName={() => "dark-table-row"}
-                />
-              </div>
-            </div>
-          </Modal>
-
           {/* Journal Modal */}
           <Modal
-            title={<span className="text-white">{t('dashboardPage.employeeJournal')}</span>}
+            title={
+              <span className="text-white">
+                {t("dashboardPage.employeeJournal")}
+              </span>
+            }
             open={journal}
             onCancel={() => setJournal(false)}
             footer={null}
             width="70vw"
             style={{ top: 20 }}
             className="dark-modal"
-            styles={{ content: { backgroundColor: '#111827', borderRadius: '1rem' }, header: { backgroundColor: '#111827', borderBottom: '1px solid #374151' } }}
+            styles={{
+              content: { backgroundColor: "#111827", borderRadius: "1rem" },
+              header: {
+                backgroundColor: "#111827",
+                borderBottom: "1px solid #374151",
+              },
+            }}
           >
             <Table
               size="small"
@@ -768,8 +700,8 @@ return (
                 total: total,
                 showSizeChanger: false,
                 onChange: (p) => setPage(p),
-                showTotal: (total) => `${t('dashboardPage.total')}: ${total}`,
-                className: "dark-pagination"
+                showTotal: (total) => `${t("dashboardPage.total")}: ${total}`,
+                className: "dark-pagination",
               }}
               scroll={{ y: 500 }}
               className="dark-table table-compact"
