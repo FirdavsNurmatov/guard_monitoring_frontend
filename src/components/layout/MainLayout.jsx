@@ -172,11 +172,11 @@ export default function MainLayout() {
             }
             onClick={() => setCollapsed(!collapsed)}
             className="btn-toggle"
-          />{" "}
-          <h3 className="text-white font-semibold ml-4">
+          />
+          <h3 className="text-white font-semibold ml-4 text-xl">
             {t("common.dashboard")}
           </h3>
-          <div className="ml-auto mr-4">
+          <div className="ml-auto mr-4 bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1 leading-none">
             <LanguageSwitcher />
           </div>
         </Header>

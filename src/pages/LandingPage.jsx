@@ -4,7 +4,6 @@ import {
   Map,
   Bell,
   Camera,
-  Clock,
   Check,
   Smartphone,
   Wifi,
@@ -120,6 +119,9 @@ function App() {
   const { t } = useTranslation();
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [viewType, setViewType] = useState("MAP");
+  if (!localStorage.getItem("i18nextLng")) {
+    localStorage.setItem("i18nextLng", "latin");
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-hidden">
@@ -130,7 +132,7 @@ function App() {
             <span className="text-xl font-bold">Guard Monitoring</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1.5">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1">
               <LanguageSwitcher />
             </div>
             <div className="flex flex-col xl:flex-row xl:items-center gap-3">

@@ -28,7 +28,6 @@ const LanguageSwitcher = ({ size = "default", className = "" }) => {
         size={size}
         variant="borderless"
         className="lang-switcher"
-        dropdownStyle={{ borderRadius: '0.75rem', backgroundColor: '#1f2937', border: '1px solid #374151' }}
         style={{ 
           width: 'auto',
           minWidth: '100px'
@@ -38,7 +37,7 @@ const LanguageSwitcher = ({ size = "default", className = "" }) => {
           <Option key={lang.code} value={lang.code}>
             <span className="flex items-center gap-2">
               <span>{lang.flag}</span>
-              <span className="text-green-500">{lang.name}</span>
+              <span className="text-white">{lang.name}</span>
             </span>
           </Option>
         ))}

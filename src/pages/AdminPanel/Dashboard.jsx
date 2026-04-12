@@ -129,62 +129,68 @@ export default function Dashboard() {
   }, [t]);
 
   // 🟢 Loglarni olish
-  const fetchInitialLogs = useCallback(async (objectId) => {
-    try {
-      const res = await instance.get(
-        `/admin/logs?limit=50&objectId=${objectId}`,
-      );
-      const data = res?.data?.data || [];
+  const fetchInitialLogs = useCallback(
+    async (objectId) => {
+      try {
+        const res = await instance.get(
+          `/admin/logs?limit=50&objectId=${objectId}`,
+        );
+        const data = res?.data?.data || [];
 
-      const formattedLogs = data.map((log) => ({
-        id: log.id,
-        guard: log.user?.username || log.user?.login,
-        checkpoint: log.checkpoint?.name || "-",
-        status: log.status,
-        createdAt: new Date(log.createdAt).toLocaleTimeString(),
-        createdAtRaw: new Date(log.createdAt),
-        zoneId: log.checkpoint?.id,
-        userId: log.userId,
-      }));
+        const formattedLogs = data.map((log) => ({
+          id: log.id,
+          guard: log.user?.username || log.user?.login,
+          checkpoint: log.checkpoint?.name || "-",
+          status: log.status,
+          createdAt: new Date(log.createdAt).toLocaleTimeString(),
+          createdAtRaw: new Date(log.createdAt),
+          zoneId: log.checkpoint?.id,
+          userId: log.userId,
+        }));
 
-      setLogs(formattedLogs);
+        setLogs(formattedLogs);
 
-      const guardsArr = [];
-      data.forEach((log) => {
-        if (!log.userId) return;
-        if (!guardsArr.some((g) => g.guardId === log.userId)) {
-          guardsArr.push({
-            guardId: log.userId,
-            login: log.user?.login,
-            username: log.user?.username,
-            checkpointName: log.checkpoint?.name,
-            status: log.status,
-          });
-        }
-      });
+        const guardsArr = [];
+        data.forEach((log) => {
+          if (!log.userId) return;
+          if (!guardsArr.some((g) => g.guardId === log.userId)) {
+            guardsArr.push({
+              guardId: log.userId,
+              login: log.user?.login,
+              username: log.user?.username,
+              checkpointName: log.checkpoint?.name,
+              status: log.status,
+            });
+          }
+        });
 
-      setGuards(guardsArr);
-    } catch {
-      toast.error(t("dashboardPage.loadLogsError"));
-    }
-  }, [t]);
+        setGuards(guardsArr);
+      } catch {
+        toast.error(t("dashboardPage.loadLogsError"));
+      }
+    },
+    [t],
+  );
 
-  const handleSelectMap = useCallback(async (id) => {
-    setLoading(true);
-    setSelectedMapId(id); // Store ga saqlash
-    try {
-      const res = await instance.get(`/object/${id}`);
-      setSelectedMap({
-        ...res.data,
-        imageUrl: `${baseUrl}${res.data.imageUrl}`,
-      });
-      await fetchInitialLogs(id);
-    } catch (err) {
-      toast.error(t("dashboardPage.loadObjectError"));
-    } finally {
-      setLoading(false);
-    }
-  }, [baseUrl, fetchInitialLogs, t]);
+  const handleSelectMap = useCallback(
+    async (id) => {
+      setLoading(true);
+      setSelectedMapId(id); // Store ga saqlash
+      try {
+        const res = await instance.get(`/object/${id}`);
+        setSelectedMap({
+          ...res.data,
+          imageUrl: `${baseUrl}${res.data.imageUrl}`,
+        });
+        await fetchInitialLogs(id);
+      } catch (err) {
+        toast.error(t("dashboardPage.loadObjectError"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [baseUrl, fetchInitialLogs, t],
+  );
 
   // JournalLogs
   useEffect(() => {
@@ -253,19 +259,22 @@ export default function Dashboard() {
   }, [i18n.language]);
 
   // 🛰️ GPS real-time yangilanishlar
-  const handleGps = useCallback(async (msg) => {
-    // Masalan: msg = "gps:3"
-    if (!msg.startsWith("gps:")) return;
+  const handleGps = useCallback(
+    async (msg) => {
+      // Masalan: msg = "gps:3"
+      if (!msg.startsWith("gps:")) return;
 
-    const userId = msg.split(":")[1];
-    try {
-      const res = await instance.get(`/admin/gps/${userId}?limit=20`);
-      const points = res.data.map((p) => [p.location?.lat, p.location?.lng]);
-      setGpsPoints(points);
-    } catch (err) {
-      toast.error(t("dashboardPage.loadGpsError"));
-    }
-  }, [t]);
+      const userId = msg.split(":")[1];
+      try {
+        const res = await instance.get(`/admin/gps/${userId}?limit=20`);
+        const points = res.data.map((p) => [p.location?.lat, p.location?.lng]);
+        setGpsPoints(points);
+      } catch (err) {
+        toast.error(t("dashboardPage.loadGpsError"));
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (!socket) return;
@@ -297,7 +306,9 @@ export default function Dashboard() {
     return {
       guardsCount: guards.length,
       onTimeCount: logs.filter((l) => l.status === "ON_TIME").length,
-      lateCount: logs.filter((l) => l.status === "LATE" || l.status === "VERY_LATE").length,
+      lateCount: logs.filter(
+        (l) => l.status === "LATE" || l.status === "VERY_LATE",
+      ).length,
       lastLogTime: logs[0]?.createdAt?.split(",")[1]?.trim() || "--:--",
     };
   }, [guards, logs]);
@@ -373,13 +384,14 @@ export default function Dashboard() {
                     </Option>
                   ))}
                 </Select>
+
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 mr-2">
+                  <LanguageSwitcher />
+                </div>
               </div>
 
               {/* Right */}
               <div className="flex items-center gap-1">
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-1 mr-2">
-                  <LanguageSwitcher />
-                </div>
                 <Button
                   size="medium"
                   type="primary"
@@ -417,7 +429,9 @@ export default function Dashboard() {
                   {t("dashboardPage.late")}:{" "}
                   <b className="text-amber-400">{stats.lateCount}</b>
                 </span>
-                <span className="ml-auto text-gray-500">{stats.lastLogTime}</span>
+                <span className="ml-auto text-gray-500">
+                  {stats.lastLogTime}
+                </span>
               </div>
             )}
           </div>
