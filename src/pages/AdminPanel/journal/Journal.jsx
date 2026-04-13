@@ -1,9 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { instance } from "../../../config/axios-instance";
-import { DatePicker, Table, ConfigProvider, theme } from "antd";
+import { DatePicker, Table, ConfigProvider, Button, Select } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useObjectStore } from "../../../store/useObjectStore";
 import { formatDate } from "../../../utils/dateFormat";
+import dayjs from "dayjs";
+import "./Journal.css";
 
 const Journal = () => {
   const { t, i18n } = useTranslation();
@@ -16,62 +19,166 @@ const Journal = () => {
         ? "ru-RU"
         : "en-US";
 
+  // Initialize search state from localStorage with defaults
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const saved = localStorage.getItem("journalSelectedDate");
+    return saved ? dayjs(saved) : dayjs();
+  });
+
+  const [dateRange, setDateRange] = useState(() => {
+    const saved = localStorage.getItem("journalDateRange");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [pickerMode, setPickerMode] = useState(() => {
+    return localStorage.getItem("journalPickerMode") || "month";
+  });
+
+  const [hasSearched, setHasSearched] = useState(() => {
+    return localStorage.getItem("journalHasSearched") === "true";
+  });
+
   const [journalLogs, setJournalLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
+  // Save search state to localStorage when any of it changes
   useEffect(() => {
-    const fetchJournalLogs = async () => {
-      if (!selectedMapId) return;
+    localStorage.setItem("journalHasSearched", hasSearched.toString());
+    if (selectedDate) {
+      localStorage.setItem("journalSelectedDate", selectedDate.toISOString());
+    }
+    if (dateRange) {
+      localStorage.setItem("journalDateRange", JSON.stringify(dateRange));
+    }
+    localStorage.setItem("journalPickerMode", pickerMode);
+  }, [hasSearched, selectedDate, dateRange, pickerMode]);
 
-      try {
-        const res = await instance.get(
-          `/admin/monitoringLogs?objectId=${selectedMapId}&page=${page}&limit=30`,
-        );
-        const data = res?.data?.items || res?.data || [];
-        const formattedLogs = data.map((log) => ({
-          id: log.id,
-          guard: log.user?.username || log.user?.login,
-          checkpoint: log.checkpoint?.name || "-",
-          createdAtRaw: new Date(log.createdAt),
-          status: log.status,
-        }));
-        setJournalLogs(formattedLogs);
-        setTotal(res?.data?.total || data.length || 0);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching journal logs:", error);
-        setLoading(false);
+  const fetchJournalLogs = async (currentPage = 1) => {
+    if (!selectedMapId) return;
+
+    try {
+      let url;
+
+      if (hasSearched && (selectedDate || dateRange)) {
+        // Use filtered API when search is performed
+        if (pickerMode === "range" && dateRange) {
+          // Range mode - send custom start and end dates without period
+          const startDate = dayjs(dateRange[0]).format("YYYY-MM-DD");
+          const endDate = dayjs(dateRange[1]).format("YYYY-MM-DD");
+          url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&page=${currentPage}&limit=30&startDate=${startDate}&endDate=${endDate}`;
+        } else if (selectedDate) {
+          // Day/Week/Month mode - use period
+          const period =
+            pickerMode === "date"
+              ? "daily"
+              : pickerMode === "week"
+                ? "weekly"
+                : "monthly";
+          url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&page=${currentPage}&limit=30&period=${period}`;
+
+          const startDate = selectedDate
+            .startOf(
+              pickerMode === "date"
+                ? "day"
+                : pickerMode === "week"
+                  ? "week"
+                  : "month",
+            )
+            .format("YYYY-MM-DD");
+          const endDate = selectedDate
+            .endOf(
+              pickerMode === "date"
+                ? "day"
+                : pickerMode === "week"
+                  ? "week"
+                  : "month",
+            )
+            .format("YYYY-MM-DD");
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
+      } else {
+        // Use regular API for general data with pagination
+        url = `/admin/monitoringLogs?objectId=${selectedMapId}&page=${currentPage}&limit=30`;
       }
-    };
-    fetchJournalLogs();
-  }, [page, selectedMapId]);
+
+      const res = await instance.get(url);
+      const data = res?.data?.items || res?.data || [];
+      const formattedLogs = data.map((log) => ({
+        id: log.id,
+        guard: log.user?.username || log.user?.login,
+        checkpoint: log.checkpoint?.name || "-",
+        createdAtRaw: new Date(log.createdAt),
+        status: log.status,
+      }));
+      setJournalLogs(formattedLogs);
+      setTotal(res?.data?.total || data.length || 0);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching journal logs:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJournalLogs(page);
+  }, [page, selectedMapId, hasSearched]);
 
   const sortedJournalLogs = useMemo(() => {
-    let filtered = [...journalLogs];
+    return [...journalLogs].sort((a, b) => b.createdAtRaw - a.createdAtRaw);
+  }, [journalLogs]);
 
-    if (dateRange && dateRange[0] && dateRange[1]) {
-      const startDate = new Date(dateRange[0].$d);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(dateRange[1].$d);
-      endDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter((log) => {
-        const logDate = new Date(log.createdAtRaw);
-        return logDate >= startDate && logDate <= endDate;
-      });
+  const filteredTotal = total;
+
+  const handleSearch = () => {
+    setSearchLoading(true);
+    setHasSearched(true);
+    setPage(1);
+    setLoading(true);
+    fetchJournalLogs(1);
+    setTimeout(() => {
+      setSearchLoading(false);
+    }, 300);
+  };
+
+  const handleClear = () => {
+    setSelectedDate(null);
+    setDateRange(null);
+    setHasSearched(false);
+    setPage(1);
+  };
+
+  const getPickerPlaceholder = () => {
+    switch (pickerMode) {
+      case "date":
+        return t("common.selectDate");
+      case "week":
+        return t("common.selectWeek");
+      case "month":
+        return t("common.selectMonth");
+      case "range":
+        return [t("common.startDate"), t("common.endDate")];
+      default:
+        return t("common.selectDate");
     }
+  };
 
-    return filtered.sort((a, b) => b.createdAtRaw - a.createdAtRaw);
-  }, [journalLogs, dateRange]);
-
-  const filteredTotal = useMemo(() => {
-    if (dateRange && dateRange[0] && dateRange[1]) {
-      return sortedJournalLogs.length;
+  const getPickerFormat = () => {
+    switch (pickerMode) {
+      case "date":
+        return "DD MMMM YYYY";
+      case "week":
+        return "[Week] w, YYYY";
+      case "month":
+        return "MMMM YYYY";
+      case "range":
+        return "DD/MM/YYYY";
+      default:
+        return "DD MMMM YYYY";
     }
-    return total;
-  }, [dateRange, sortedJournalLogs.length, total]);
+  };
 
   const journalColumns = [
     {
@@ -120,7 +227,7 @@ const Journal = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 relative overflow-hidden">
+    <div className="bg-gray-950 p-6 relative">
       <style>{`
         .ant-picker-input input {
           color: white !important;
@@ -187,27 +294,72 @@ const Journal = () => {
                 },
               }}
             >
-              <DatePicker.RangePicker
-                value={dateRange}
-                onChange={(dates) => {
-                  setDateRange(dates);
-                  setPage(1);
+              <Select
+                value={pickerMode}
+                onChange={(value) => {
+                  setPickerMode(value);
                 }}
                 className="dark-select"
-                placeholder={[t("common.startDate"), t("common.endDate")]}
-                popupClassName="dark-picker"
+                style={{ width: 100 }}
+                options={[
+                  { label: t("common.day"), value: "date" },
+                  { label: t("common.week"), value: "week" },
+                  { label: t("common.month"), value: "month" },
+                  { label: t("common.range"), value: "range" },
+                ]}
               />
+              {pickerMode === "range" ? (
+                <DatePicker.RangePicker
+                  value={dateRange}
+                  onChange={(dates) => {
+                    setDateRange(dates);
+                    setSelectedDate(null);
+                  }}
+                  className="dark-select"
+                  placeholder={getPickerPlaceholder()}
+                  popupClassName="dark-picker"
+                  format={getPickerFormat()}
+                />
+              ) : (
+                <DatePicker
+                  value={selectedDate}
+                  onChange={(date) => {
+                    setSelectedDate(date);
+                    setDateRange(null);
+                  }}
+                  picker={pickerMode}
+                  className="dark-select"
+                  placeholder={getPickerPlaceholder()}
+                  format={getPickerFormat()}
+                />
+              )}
             </ConfigProvider>
-            {dateRange && (
-              <button
-                onClick={() => {
-                  setDateRange(null);
-                  setPage(1);
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={handleSearch}
+              loading={searchLoading}
+              className="bg-emerald-500 hover:bg-emerald-600 border-emerald-500 text-white"
+              style={{
+                backgroundColor: "#10b981",
+                borderColor: "#10b981",
+                color: "white",
+              }}
+            >
+              {t("common.search")}
+            </Button>
+            {(selectedDate || dateRange) && (
+              <Button
+                onClick={handleClear}
+                className="bg-red-500 hover:bg-red-600 border-red-500 text-white"
+                style={{
+                  backgroundColor: "#ef4444",
+                  borderColor: "#ef4444",
+                  color: "white",
                 }}
-                className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-red-500/30"
               >
                 {t("common.clear")}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -227,7 +379,8 @@ const Journal = () => {
             }}
             loading={loading}
             className="dark-table table-large"
-            size="middle"
+            size="medium"
+            scroll={{ y: 520 }}
             rowClassName={(record) =>
               record.status === "ON_TIME"
                 ? "bg-emerald-500/10"

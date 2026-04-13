@@ -266,6 +266,31 @@
   color: #9ca3af !important;
 }
 
+/* Table Scrollbar Styling */
+.dark-table .ant-table-body::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+.dark-table .ant-table-body::-webkit-scrollbar-track {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-radius: 4px !important;
+}
+
+.dark-table .ant-table-body::-webkit-scrollbar-thumb {
+  background: #10b981 !important;
+  border-radius: 4px !important;
+}
+
+.dark-table .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #059669 !important;
+}
+
+/* Firefox scrollbar support */
+.table-large .ant-table-container .ant-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: #10b981 rgba(16, 185, 129, 0.1);
+}
+
 /* ==================== Pagination Styles ==================== */
 .dark-pagination {
   background-color: #111827 !important;

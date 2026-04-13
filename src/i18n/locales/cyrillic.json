@@ -31,7 +31,14 @@
     "warning": "Огоҳлантириш",
     "info": "Маълумот",
     "startDate": "Бошланиш санаси",
-    "endDate": "Тугаш санаси"
+    "endDate": "Тугаш санаси",
+    "day": "Кун",
+    "week": "Ҳафта",
+    "month": "Ой",
+    "range": "Оралиқ",
+    "selectDate": "Санани танланг",
+    "selectWeek": "Ҳафтани танланг",
+    "selectMonth": "Ойни танланг"
   },
   "navigation": {
     "home": "Асосий",

@@ -31,7 +31,14 @@
     "warning": "Ogohlantirish",
     "info": "Ma'lumot",
     "startDate": "Boshlanish sana",
-    "endDate": "Tugash sana"
+    "endDate": "Tugash sana",
+    "day": "Kun",
+    "week": "Hafta",
+    "month": "Oy",
+    "range": "Oraliq",
+    "selectDate": "Sanani tanlang",
+    "selectWeek": "Haftani tanlang",
+    "selectMonth": "Oyni tanlang"
   },
   "navigation": {
     "home": "Asosiy",

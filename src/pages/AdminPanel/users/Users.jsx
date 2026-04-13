@@ -191,7 +191,7 @@ const Users = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 relative overflow-hidden">
+    <div className="bg-gray-950 p-6 relative">
       {/* Background effects like LandingPage */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black pointer-events-none"></div>
       <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -221,7 +221,7 @@ const Users = () => {
               setIsFormModalOpen(true);
             }}
           >
-            {t("usersPage.addUser")}
+            + {t("usersPage.addUser")}
           </Button>
         </div>
 

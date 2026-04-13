@@ -1,0 +1,7 @@
+/* Journal Page Specific Styles */
+
+/* Firefox scrollbar support */
+.table-large .ant-table-container .ant-table-body {
+  scrollbar-width: auto;
+  scrollbar-color: #10b981 rgba(16, 185, 129, 0.1);
+}
