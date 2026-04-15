@@ -1,11 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { instance } from "../../../config/axios-instance";
 import { DatePicker, Table, ConfigProvider, Button, Select } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useObjectStore } from "../../../store/useObjectStore";
 import { formatDate } from "../../../utils/dateFormat";
 import dayjs from "dayjs";
+import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
 import "./Journal.css";
 
 const Journal = () => {
@@ -43,6 +45,7 @@ const Journal = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [exportPeriod, setExportPeriod] = useState("day");
 
   // Save search state to localStorage when any of it changes
   useEffect(() => {
@@ -148,6 +151,62 @@ const Journal = () => {
     setDateRange(null);
     setHasSearched(false);
     setPage(1);
+  };
+
+  const handleExportToExcel = async () => {
+    if (!selectedMapId) return;
+
+    try {
+      let url;
+      const now = dayjs();
+
+      if (exportPeriod === "day") {
+        const startDate = now.startOf("day").format("YYYY-MM-DD");
+        const endDate = now.endOf("day").format("YYYY-MM-DD");
+        url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
+      } else if (exportPeriod === "week") {
+        const startDate = now.startOf("week").format("YYYY-MM-DD");
+        const endDate = now.endOf("week").format("YYYY-MM-DD");
+        url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
+      } else if (exportPeriod === "month") {
+        const startDate = now.startOf("month").format("YYYY-MM-DD");
+        const endDate = now.endOf("month").format("YYYY-MM-DD");
+        url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
+      }
+
+      const res = await instance.get(url);
+      const data = res?.data?.items || res?.data || [];
+
+      if (data.length === 0) {
+        toast.error(t("messages.noDataToExport"));
+        return;
+      }
+
+      const exportData = data.map((log) => ({
+        [t("dashboardPage.username")]:
+          log.user?.username || log.user?.login || "-",
+        [t("dashboardPage.checkpointName")]: log.checkpoint?.name || "-",
+        [t("dashboardPage.arrivalDate")]: formatDate(
+          new Date(log.createdAt),
+          true,
+        ),
+        [t("dashboardPage.status")]:
+          log.status === "ON_TIME"
+            ? t("dashboardPage.onTimeStatus")
+            : log.status === "LATE"
+              ? t("dashboardPage.lateStatus")
+              : t("dashboardPage.veryLateStatus"),
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Journal");
+      const fileName = `journal_${exportPeriod}_${now.format("YYYY-MM-DD")}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error(t("messages.exportError"));
+    }
   };
 
   const getPickerPlaceholder = () => {
@@ -283,6 +342,50 @@ const Journal = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 bg-gray-800/50 px-4 py-2 rounded-lg border border-gray-700/50">
+              <span className="text-gray-400 text-sm font-medium">
+                {t("common.excel")}:
+              </span>
+              <ConfigProvider
+                theme={{
+                  token: {
+                    colorPrimary: "#10b981",
+                    colorText: "white",
+                    colorTextPlaceholder: "rgba(255, 255, 255, 0.5)",
+                    colorBorder: "#10b981",
+                    colorBgContainer: "rgba(16, 185, 129, 0.1)",
+                  },
+                }}
+              >
+                <Select
+                  value={exportPeriod}
+                  onChange={(value) => {
+                    setExportPeriod(value);
+                  }}
+                  className="dark-select"
+                  style={{ width: 120 }}
+                  options={[
+                    { label: t("common.day"), value: "day" },
+                    { label: t("common.week"), value: "week" },
+                    { label: t("common.month"), value: "month" },
+                  ]}
+                />
+              </ConfigProvider>
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={handleExportToExcel}
+                className="bg-emerald-500 hover:bg-emerald-600 border-emerald-500 text-white"
+                style={{
+                  backgroundColor: "#10b981",
+                  borderColor: "#10b981",
+                  color: "white",
+                }}
+              >
+                {t("common.export")}
+              </Button>
+            </div>
+
             <ConfigProvider
               theme={{
                 token: {

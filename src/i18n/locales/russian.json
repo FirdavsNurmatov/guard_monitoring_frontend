@@ -38,7 +38,9 @@
     "range": "Диапазон",
     "selectDate": "Выберите дату",
     "selectWeek": "Выберите неделю",
-    "selectMonth": "Выберите месяц"
+    "selectMonth": "Выберите месяц",
+    "export": "Скачать",
+    "excel": "Excel"
   },
   "navigation": {
     "home": "Главная",
@@ -124,7 +126,9 @@
     "updateSuccess": "Данные успешно обновлены",
     "confirmDelete": "Вы уверены, что хотите удалить этот элемент?",
     "operationSuccess": "Операция выполнена успешно",
-    "operationFailed": "Операция не выполнена"
+    "operationFailed": "Операция не выполнена",
+    "noDataToExport": "Нет данных для экспорта",
+    "exportError": "Ошибка при экспорте в Excel"
   },
   "landing": {
     "requestDemo": "Запросить демо",

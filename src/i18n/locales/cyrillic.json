@@ -38,7 +38,9 @@
     "range": "Оралиқ",
     "selectDate": "Санани танланг",
     "selectWeek": "Ҳафтани танланг",
-    "selectMonth": "Ойни танланг"
+    "selectMonth": "Ойни танланг",
+    "export": "Юклаб олиш",
+    "excel": "Excel"
   },
   "navigation": {
     "home": "Асосий",
@@ -124,7 +126,9 @@
     "updateSuccess": "Маълумотлар муваффақиятли янгиланди",
     "confirmDelete": "Ушбу маълумотни ўчиришни тасдиқлайсизми?",
     "operationSuccess": "Амал муваффақиятли бажарилди",
-    "operationFailed": "Амал бажарилмади"
+    "operationFailed": "Амал бажарилмади",
+    "noDataToExport": "Юклаш учун маълумот йўқ",
+    "exportError": "Excelга юклашда хатолик юз берди"
   },
   "landing": {
     "requestDemo": "Демо сўраш",
