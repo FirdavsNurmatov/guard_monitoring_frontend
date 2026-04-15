@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
+import { useObjectStore } from "../store/useObjectStore";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -25,18 +26,24 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const resetObjectSettings = useObjectStore(
+      (state) => state.resetObjectSettings,
+    );
+    const resetAuth = useAuthStore((state) => state.resetAuth);
+
     setApiError("");
+    resetObjectSettings();
+    resetAuth();
+    Cookies.remove("accessToken");
+    Cookies.remove("refreshToken");
+    localStorage.removeItem("object-settings");
+    localStorage.removeItem("journalDateRange");
+    localStorage.removeItem("journalHasSearched");
+    localStorage.removeItem("journalPickerMode");
+    localStorage.removeItem("journalSelectedDate");
 
     try {
-      Cookies.remove('accessToken')
-      Cookies.remove('refreshToken')
-      localStorage.removeItem("auth");
-      localStorage.removeItem("object-settings");
-      localStorage.removeItem("journalDateRange");
-      localStorage.removeItem("journalHasSearched");
-      localStorage.removeItem("journalPickerMode");
-      localStorage.removeItem("journalSelectedDate");
-
       const res = await instance.post("/auth/login", {
         login: formData.login,
         password: formData.password,
