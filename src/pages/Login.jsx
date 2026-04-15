@@ -28,8 +28,14 @@ export default function Login() {
     setApiError("");
 
     try {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      Cookies.remove('accessToken')
+      Cookies.remove('refreshToken')
+      localStorage.removeItem("auth");
+      localStorage.removeItem("object-settings");
+      localStorage.removeItem("journalDateRange");
+      localStorage.removeItem("journalHasSearched");
+      localStorage.removeItem("journalPickerMode");
+      localStorage.removeItem("journalSelectedDate");
 
       const res = await instance.post("/auth/login", {
         login: formData.login,
