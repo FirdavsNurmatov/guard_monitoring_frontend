@@ -15,7 +15,8 @@ export default function Login() {
   const [apiError, setApiError] = useState("");
 
   const navigate = useNavigate();
-  const { setUser, setToken } = useAuthStore((store) => store);
+  const { setUser, setToken, resetAuth } = useAuthStore((store) => store);
+  const resetObjectSettings = useObjectStore((state) => state.resetObjectSettings);
 
   const [formData, setFormData] = useState({
     login: "",
@@ -26,11 +27,6 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    const resetObjectSettings = useObjectStore(
-      (state) => state.resetObjectSettings,
-    );
-    const resetAuth = useAuthStore((state) => state.resetAuth);
 
     setApiError("");
     resetObjectSettings();
