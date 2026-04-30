@@ -237,7 +237,8 @@
     "viewMap": "Посмотреть на карте",
     "latitude": "Широта",
     "longitude": "Долгота",
-    "checkinLocation": "Место проверки"
+    "checkinLocation": "Место проверки",
+    "distance": "Расстояние"
   },
   "pagination": {
     "total": "Всего: {{count}}"

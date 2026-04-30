@@ -252,7 +252,8 @@
     "viewMap": "Xaritadan ko'rish",
     "latitude": "Kenglik",
     "longitude": "Uzunlik",
-    "checkinLocation": "Tekshiruv joylashuvi"
+    "checkinLocation": "Tekshiruv joylashuvi",
+    "distance": "Masofa"
   },
   "pagination": {
     "total": "Jami: {{count}} ta"

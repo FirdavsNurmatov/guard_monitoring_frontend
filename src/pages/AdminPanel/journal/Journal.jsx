@@ -112,14 +112,25 @@ const Journal = () => {
 
       const res = await instance.get(url);
       const data = res?.data?.items || res?.data || [];
-      const formattedLogs = data.map((log) => ({
-        id: log.id,
-        guard: log.user?.username || log.user?.login,
-        checkpoint: log.checkpoint?.name || "-",
-        createdAtRaw: new Date(log.createdAt),
-        status: log.status,
-        location: log.location || null,
-      }));
+      const formattedLogs = data.map((log) => {
+        const distance = calculateDistance(
+          log.location?.latitude,
+          log.location?.longitude,
+          log.checkpoint?.location?.lat,
+          log.checkpoint?.location?.lng
+        );
+
+        return {
+          id: log.id,
+          guard: log.user?.username || log.user?.login,
+          checkpoint: log.checkpoint?.name || "-",
+          checkpointLocation: log.checkpoint?.location || null,
+          createdAtRaw: new Date(log.createdAt),
+          status: log.status,
+          location: log.location || null,
+          distance: distance,
+        };
+      });
       setJournalLogs(formattedLogs);
       setTotal(res?.data?.total || data.length || 0);
       setLoading(false);
@@ -138,6 +149,24 @@ const Journal = () => {
   }, [journalLogs]);
 
   const filteredTotal = total;
+
+  // Calculate distance between two coordinates in meters using Haversine formula
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return Math.round(R * c);
+  };
 
   const handleSearch = () => {
     setSearchLoading(true);
@@ -315,6 +344,19 @@ const Journal = () => {
           <span className="text-gray-500">-</span>
         ),
       key: "location",
+    },
+    {
+      title: t("dashboardPage.distance"),
+      dataIndex: "distance",
+      render: (distance) =>
+        distance !== null && distance !== undefined ? (
+          <span className="text-gray-300">
+            {distance} m
+          </span>
+        ) : (
+          <span className="text-gray-500">-</span>
+        ),
+      key: "distance",
     },
   ];
 

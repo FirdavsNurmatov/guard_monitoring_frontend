@@ -237,7 +237,8 @@
     "viewMap": "Харитадан кўриш",
     "latitude": "Кенглик",
     "longitude": "Узунлик",
-    "checkinLocation": "Текширув жойлашуви"
+    "checkinLocation": "Текширув жойлашуви",
+    "distance": "Масофа"
   },
   "pagination": {
     "total": "Жами: {{count}} та"
