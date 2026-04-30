@@ -247,7 +247,12 @@
     "loadObjectsError": "Obyektlar ro'yxatini yuklab bo'lmadi",
     "loadObjectError": "Obyekt ma'lumotlarini yuklab bo'lmadi",
     "loadLogsError": "Loglarni olishda xatolik yuz berdi",
-    "loadGpsError": "GPS ma'lumotlarini yuklab bo'lmadi"
+    "loadGpsError": "GPS ma'lumotlarini yuklab bo'lmadi",
+    "location": "Joylashuv",
+    "viewMap": "Xaritadan ko'rish",
+    "latitude": "Kenglik",
+    "longitude": "Uzunlik",
+    "checkinLocation": "Tekshiruv joylashuvi"
   },
   "pagination": {
     "total": "Jami: {{count}} ta"

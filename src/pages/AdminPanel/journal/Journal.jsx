@@ -1,13 +1,14 @@
 import { useEffect, useState, useMemo } from "react";
 import { instance } from "../../../config/axios-instance";
 import { DatePicker, Table, ConfigProvider, Button, Select } from "antd";
-import { SearchOutlined, DownloadOutlined } from "@ant-design/icons";
+import { SearchOutlined, DownloadOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useObjectStore } from "../../../store/useObjectStore";
 import { formatDate } from "../../../utils/dateFormat";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
+import LocationMapModal from "./component/LocationMapModal";
 import "./Journal.css";
 
 const Journal = () => {
@@ -46,6 +47,8 @@ const Journal = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [exportPeriod, setExportPeriod] = useState("day");
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   // Save search state to localStorage when any of it changes
   useEffect(() => {
@@ -115,6 +118,7 @@ const Journal = () => {
         checkpoint: log.checkpoint?.name || "-",
         createdAtRaw: new Date(log.createdAt),
         status: log.status,
+        location: log.location || null,
       }));
       setJournalLogs(formattedLogs);
       setTotal(res?.data?.total || data.length || 0);
@@ -196,6 +200,8 @@ const Journal = () => {
             : log.status === "LATE"
               ? t("dashboardPage.lateStatus")
               : t("dashboardPage.veryLateStatus"),
+        [t("dashboardPage.latitude")]: log.location?.latitude || "-",
+        [t("dashboardPage.longitude")]: log.location?.longitude || "-",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -282,6 +288,33 @@ const Journal = () => {
           </span>
         ),
       key: "status",
+    },
+    {
+      title: t("dashboardPage.location"),
+      dataIndex: "location",
+      render: (location, record) =>
+        location ? (
+          <Button
+            type="link"
+            icon={<EnvironmentOutlined />}
+            onClick={() => {
+              setSelectedLocation({
+                ...location,
+                checkpoint: record.checkpoint,
+                guard: record.guard,
+                createdAtRaw: record.createdAtRaw,
+                status: record.status,
+              });
+              setMapModalOpen(true);
+            }}
+            className="text-emerald-400 hover:text-emerald-300"
+          >
+            {t("dashboardPage.viewMap")}
+          </Button>
+        ) : (
+          <span className="text-gray-500">-</span>
+        ),
+      key: "location",
     },
   ];
 
@@ -493,6 +526,15 @@ const Journal = () => {
             }
           />
         </div>
+        <LocationMapModal
+          open={mapModalOpen}
+          onClose={() => setMapModalOpen(false)}
+          location={selectedLocation}
+          checkpoint={selectedLocation?.checkpoint}
+          guard={selectedLocation?.guard}
+          createdAtRaw={selectedLocation?.createdAtRaw}
+          status={selectedLocation?.status}
+        />
       </div>
     </div>
   );

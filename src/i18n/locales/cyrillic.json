@@ -232,7 +232,12 @@
     "loadObjectsError": "Объектлар рўйхатини юклаб бўлмади",
     "loadObjectError": "Объект маълумотларини юклаб бўлмади",
     "loadLogsError": "Логларни олишда хатолик юз берди",
-    "loadGpsError": "GPS маълумотларини юклаб бўлмади"
+    "loadGpsError": "GPS маълумотларини юклаб бўлмади",
+    "location": "Жойлашув",
+    "viewMap": "Харитадан кўриш",
+    "latitude": "Кенглик",
+    "longitude": "Узунлик",
+    "checkinLocation": "Текширув жойлашуви"
   },
   "pagination": {
     "total": "Жами: {{count}} та"

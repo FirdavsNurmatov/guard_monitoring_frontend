@@ -232,7 +232,12 @@
     "loadObjectsError": "Не удалось загрузить список объектов",
     "loadObjectError": "Не удалось загрузить данные объекта",
     "loadLogsError": "Ошибка при получении логов",
-    "loadGpsError": "Не удалось загрузить GPS данные"
+    "loadGpsError": "Не удалось загрузить GPS данные",
+    "location": "Местоположение",
+    "viewMap": "Посмотреть на карте",
+    "latitude": "Широта",
+    "longitude": "Долгота",
+    "checkinLocation": "Место проверки"
   },
   "pagination": {
     "total": "Всего: {{count}}"
