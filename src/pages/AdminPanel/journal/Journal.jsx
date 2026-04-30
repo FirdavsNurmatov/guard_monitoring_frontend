@@ -215,23 +215,33 @@ const Journal = () => {
         return;
       }
 
-      const exportData = data.map((log) => ({
-        [t("dashboardPage.username")]:
-          log.user?.username || log.user?.login || "-",
-        [t("dashboardPage.checkpointName")]: log.checkpoint?.name || "-",
-        [t("dashboardPage.arrivalDate")]: formatDate(
-          new Date(log.createdAt),
-          true,
-        ),
-        [t("dashboardPage.status")]:
-          log.status === "ON_TIME"
-            ? t("dashboardPage.onTimeStatus")
-            : log.status === "LATE"
-              ? t("dashboardPage.lateStatus")
-              : t("dashboardPage.veryLateStatus"),
-        [t("dashboardPage.latitude")]: log.location?.latitude || "-",
-        [t("dashboardPage.longitude")]: log.location?.longitude || "-",
-      }));
+      const exportData = data.map((log) => {
+        const distance = calculateDistance(
+          log.location?.latitude,
+          log.location?.longitude,
+          log.checkpoint?.location?.lat,
+          log.checkpoint?.location?.lng
+        );
+
+        return {
+          [t("dashboardPage.username")]:
+            log.user?.username || log.user?.login || "-",
+          [t("dashboardPage.checkpointName")]: log.checkpoint?.name || "-",
+          [t("dashboardPage.arrivalDate")]: formatDate(
+            new Date(log.createdAt),
+            true,
+          ),
+          [t("dashboardPage.status")]:
+            log.status === "ON_TIME"
+              ? t("dashboardPage.onTimeStatus")
+              : log.status === "LATE"
+                ? t("dashboardPage.lateStatus")
+                : t("dashboardPage.veryLateStatus"),
+          [t("dashboardPage.latitude")]: log.location?.latitude || "-",
+          [t("dashboardPage.longitude")]: log.location?.longitude || "-",
+          [t("dashboardPage.distance")]: distance !== null && distance !== undefined ? `${distance} m` : "-",
+        };
+      });
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
