@@ -8,14 +8,108 @@ const ViewModal = ({ open, onClose, objectData }) => {
   const { t } = useTranslation();
 
   const viewColumns = [
-    { title: t("superAdmin.objects.name"), dataIndex: "name" },
-    { title: t("superAdmin.objects.normalTime") + " (min)", dataIndex: "normalTime" },
-    { title: t("superAdmin.objects.passTime") + " (min)", dataIndex: "passTime" },
-    { title: t("superAdmin.objects.cardNumber"), dataIndex: "cardNumber" },
-    { title: "X %", dataIndex: ["position", "xPercent"] },
-    { title: "Y %", dataIndex: ["position", "yPercent"] },
-    { title: "Lat", dataIndex: ["location", "lat"] },
-    { title: "Lng", dataIndex: ["location", "lng"] },
+    {
+      title: "№",
+      key: "index",
+      width: 40,
+      fixed: "left",
+      render: (_, __, index) => (
+        <span style={{ color: "#6b7280", fontSize: 12 }}>{index + 1}</span>
+      ),
+    },
+    {
+      title: t("superAdmin.objects.name"),
+      dataIndex: "name",
+      width: 130,
+      fixed: "left",
+      render: (val) => (
+        <span style={{ fontWeight: 600, color: "#1d4ed8" }}>{val}</span>
+      ),
+    },
+    {
+      title: t("superAdmin.objects.normalTime"),
+      dataIndex: "normalTime",
+      width: 80,
+      align: "center",
+      render: (val) => (
+        <span
+          style={{
+            background: "#f0fdf4",
+            color: "#16a34a",
+            padding: "2px 8px",
+            borderRadius: 12,
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+        >
+          {val ?? "—"} min
+        </span>
+      ),
+    },
+    {
+      title: t("superAdmin.objects.passTime"),
+      dataIndex: "passTime",
+      width: 80,
+      align: "center",
+      render: (val) => (
+        <span
+          style={{
+            background: "#fff7ed",
+            color: "#ea580c",
+            padding: "2px 8px",
+            borderRadius: 12,
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+        >
+          {val ?? "—"} min
+        </span>
+      ),
+    },
+    {
+      title: t("superAdmin.objects.cardNumber"),
+      dataIndex: "cardNumber",
+      width: 110,
+      render: (val) => (
+        <span
+          style={{
+            fontFamily: "monospace",
+            fontSize: 12,
+            color: "#374151",
+          }}
+        >
+          {val ?? "—"}
+        </span>
+      ),
+    },
+    {
+      title: t("superAdmin.objects.positionTitle"),
+      key: "position",
+      width: 100,
+      align: "center",
+      render: (_, record) => (
+        <span style={{ fontSize: 11, color: "#6b7280" }}>
+          X: {record?.position?.xPercent ?? "—"}%
+          <br />
+          Y: {record?.position?.yPercent ?? "—"}%
+        </span>
+      ),
+    },
+    {
+      title: t("superAdmin.objects.coordinateTitle"),
+      key: "location",
+      width: 130,
+      align: "center",
+      render: (_, record) => (
+        <span
+          style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}
+        >
+          {record?.location?.lat ?? "—"}
+          <br />
+          {record?.location?.lng ?? "—"}
+        </span>
+      ),
+    },
   ];
 
   const [objectType, setObjectType] = useState("IMAGE");
@@ -24,7 +118,6 @@ const ViewModal = ({ open, onClose, objectData }) => {
 
   useEffect(() => {
     if (!objectData?.id) return;
-
     const getOneObject = async () => {
       try {
         const { data } = await instance.get(
@@ -32,11 +125,8 @@ const ViewModal = ({ open, onClose, objectData }) => {
         );
         setFullObject(data);
         setCheckpoints(data?.checkpoints || []);
-      } catch (err) {
-        // console.error("Failed to fetch object:", err);
-      }
+      } catch (err) {}
     };
-
     getOneObject();
   }, [objectData?.id]);
 
@@ -45,73 +135,187 @@ const ViewModal = ({ open, onClose, objectData }) => {
       open={open}
       onCancel={onClose}
       footer={null}
-      width={1400}
-      title={t("superAdmin.objects.viewTitle") + `: ${fullObject?.name || objectData?.name}`}
+      width={window.innerWidth * 0.99} // 1280px ekran uchun 1400 emas, 1200 optimal
+      title={
+        t("superAdmin.objects.viewTitle") +
+        `: ${fullObject?.name || objectData?.name}`
+      }
       style={{ top: 10 }}
     >
-      <div className="mt-2 mb-2 flex gap-3">
-        <Button type="default" onClick={() => setObjectType("IMAGE")}>
-          ⬅️
+      {/* Toggle buttons */}
+      <div style={{ marginBottom: 12, display: "flex", gap: 8 }}>
+        <Button
+          type={objectType === "IMAGE" ? "primary" : "default"}
+          onClick={() => setObjectType("IMAGE")}
+        >
+          🖼️ {t("superAdmin.objects.image") || "Rasm"}
         </Button>
-        <Button type="default" onClick={() => setObjectType("MAP")}>
-          ➡️
+        <Button
+          type={objectType === "MAP" ? "primary" : "default"}
+          onClick={() => setObjectType("MAP")}
+        >
+          🗺️ {t("superAdmin.objects.map") || "Xarita"}
         </Button>
       </div>
 
-      {objectType === "IMAGE" && (
-        <div className="relative inline-block border rounded-xl shadow-md">
-          {fullObject?.imageUrl ? (
-            <img
-              src={`${import.meta.env.VITE_SERVER_PORT}${fullObject?.imageUrl}`}
-              alt="map"
-              className="w-full max-h-[80vh] object-contain rounded-xl"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center m-2 justify-center">
-              <span className="text-gray-500">{t("superAdmin.objects.noImage")}</span>
+      {/* Split layout: 65% rasm | 35% jadval */}
+      <div style={{ display: "flex", gap: 12, height: "85vh" }}>
+        {/* LEFT — 60% */}
+        <div
+          style={{
+            flex: "0 0 60%",
+            overflow: "hidden",
+            borderRadius: 10,
+            border: "1px solid #e5e7eb",
+          }}
+        >
+          {objectType === "IMAGE" && (
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#f9fafb",
+              }}
+            >
+              {fullObject?.imageUrl ? (
+                <img
+                  src={`${import.meta.env.VITE_SERVER_PORT}${fullObject?.imageUrl}`}
+                  alt="map"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "fill",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                  }}
+                >
+                  <span style={{ color: "#9ca3af" }}>
+                    {t("superAdmin.objects.noImage")}
+                  </span>
+                </div>
+              )}
+
+              {fullObject?.imageUrl &&
+                checkpoints.map((point, index) => (
+                  <div
+                    key={point.id || index}
+                    style={{
+                      position: "absolute",
+                      top: `${point?.position?.yPercent ?? 5}%`,
+                      left: `${point?.position?.xPercent ?? 10}%`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        backgroundColor: "#3b82f6",
+                        borderRadius: "50%",
+                        border: "2px solid white",
+                        zIndex: 10,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: 11,
+                        backgroundColor: "white",
+                        padding: "1px 5px",
+                        borderRadius: 4,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {point.name || `${index + 1}-punkt`}
+                    </span>
+                  </div>
+                ))}
             </div>
           )}
-          {fullObject?.imageUrl &&
-            checkpoints.map((point, index) => (
-              <div
-                key={point.id || index}
-                className="absolute flex"
+
+          {objectType === "MAP" && (
+            <div style={{ height: "100%" }}>
+              <MapContainerWrapper
+                objectPosition={fullObject?.position || objectData?.position}
+                zoom={fullObject?.zoom || objectData?.zoom}
+                checkpoints={checkpoints}
+                modalOpen={open}
+                attributionControl={false}
+              />
+            </div>
+          )}
+        </div>
+        {/* RIGHT — 40% checkpoints jadvali */}
+        {checkpoints.length > 0 && (
+          <div
+            style={{
+              flex: "0 0 40%",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              border: "1px solid #e5e7eb",
+              borderRadius: 10,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: "10px 14px",
+                backgroundColor: "#eff6ff",
+                borderBottom: "1px solid #dbeafe",
+                fontWeight: 600,
+                fontSize: 13,
+                color: "#1e40af",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              📍 {t("superAdmin.objects.checkpointsTitle")}
+              <span
                 style={{
-                  top: `${point?.position?.yPercent ?? 5}%`,
-                  left: `${point?.position?.xPercent ?? 10}%`,
+                  backgroundColor: "#1d4ed8",
+                  color: "white",
+                  borderRadius: 10,
+                  padding: "1px 8px",
+                  fontSize: 11,
                 }}
               >
-                <div className="w-4 h-4 z-10 bg-blue-500 rounded-full border-2 border-white shadow" />
-                <span className="mt-1 text-xs bg-white px-1 rounded shadow">
-                  {point.name || `${index + 1}-punkt`}
-                </span>
-              </div>
-            ))}
-        </div>
-      )}
+                {checkpoints.length}
+              </span>
+            </div>
 
-      {objectType === "MAP" && (
-        <MapContainerWrapper
-          objectPosition={fullObject?.position || objectData?.position}
-          zoom={fullObject?.zoom || objectData?.zoom}
-          checkpoints={checkpoints}
-          modalOpen={open}
-          attributionControl={false}
-        />
-      )}
-
-      {checkpoints.length > 0 && (
-        <Table
-          className="mt-4"
-          rowKey={(record) => record.id || record.name}
-          columns={viewColumns}
-          dataSource={checkpoints}
-          pagination={false}
-          bordered
-          size="middle"
-          scroll={{ x: true }}
-        />
-      )}
+            {/* Jadval */}
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              <Table
+                rowKey={(record) => record.id || record.name}
+                columns={viewColumns}
+                dataSource={checkpoints}
+                pagination={false}
+                bordered={false}
+                size="small"
+                scroll={{ x: "max-content" }}
+                sticky
+                rowClassName={(_, index) =>
+                  index % 2 === 0 ? "row-even" : "row-odd"
+                }
+              />
+            </div>
+          </div>
+        )}{" "}
+      </div>
     </Modal>
   );
 };

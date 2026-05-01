@@ -128,7 +128,7 @@ const MapContainerWrapper = ({
         mapRef.current = mapInstance;
         mapInstance.on("zoomend", () => setZoom(mapInstance.getZoom()));
       }}
-      style={{ height: "500px", width: "100%" }}
+      style={{ width: "100%", height: "100%" }}
       attributionControl={false}
     >
       <TileLayer

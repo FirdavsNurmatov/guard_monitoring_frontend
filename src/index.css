@@ -10,3 +10,6 @@
 .dark-picker .ant-picker-cell-in-range:hover .ant-picker-cell-inner {
   background-color: #059669 !important;
 }
+
+.row-even td { background-color: #ffffff; }
+.row-odd  td { background-color: #f8faff; }

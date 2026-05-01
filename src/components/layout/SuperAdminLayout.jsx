@@ -125,7 +125,7 @@ export default function SuperAdminLayout() {
             }}
           />
           <h3 style={{ marginLeft: 16 }}>{t("common.dashboard")}</h3>
-          <div style={{ marginLeft: "auto", marginRight: 16 }}>
+          <div className="ml-auto mr-4 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1 leading-none">
             <LanguageSwitcher />
           </div>
         </Header>
