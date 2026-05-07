@@ -1003,6 +1003,18 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
                             <Select.Option value="LEFT">
                               {t("superAdmin.objects.styleLeft")}
                             </Select.Option>
+                            <Select.Option value="TOP_LEFT">
+                              {t("superAdmin.objects.styleTopLeft")}
+                            </Select.Option>
+                            <Select.Option value="TOP_RIGHT">
+                              {t("superAdmin.objects.styleTopRight")}
+                            </Select.Option>
+                            <Select.Option value="BOTTOM_LEFT">
+                              {t("superAdmin.objects.styleBottomLeft")}
+                            </Select.Option>
+                            <Select.Option value="BOTTOM_RIGHT">
+                              {t("superAdmin.objects.styleBottomRight")}
+                            </Select.Option>
                           </Select>
                         </div>
                       </div>

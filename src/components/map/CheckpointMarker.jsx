@@ -52,6 +52,26 @@ const LAYOUTS = {
     popup: { l: 28, t: "50%", ty: "-50%" },
     grad: "to right",
   },
+  TOP_LEFT: {
+    line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
+    popup: { b: 28, l: "50%", tx: "-5%" },
+    grad: "to top",
+  },
+  TOP_RIGHT: {
+    line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
+    popup: { b: 28, l: "50%", tx: "-95%" },
+    grad: "to top",
+  },
+  BOTTOM_LEFT: {
+    line: { w: 8, h: 25, t: 6, l: "50%", tx: "-50%" },
+    popup: { t: 28, l: "50%", tx: "-95%" },
+    grad: "to bottom",
+  },
+  BOTTOM_RIGHT: {
+    line: { w: 8, h: 25, t: 6, l: "50%", tx: "-50%" },
+    popup: { t: 28, l: "50%", tx: "-5%" },
+    grad: "to bottom",
+  },
 };
 
 function useCountdown(log, cp) {

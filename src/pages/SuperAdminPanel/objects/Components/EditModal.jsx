@@ -809,6 +809,18 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                             <Option value="LEFT">
                               {t("superAdmin.objects.styleLeft")}
                             </Option>
+                            <Option value="TOP_LEFT">
+                              {t("superAdmin.objects.styleTopLeft")}
+                            </Option>
+                            <Option value="TOP_RIGHT">
+                              {t("superAdmin.objects.styleTopRight")}
+                            </Option>
+                            <Option value="BOTTOM_LEFT">
+                              {t("superAdmin.objects.styleBottomLeft")}
+                            </Option>
+                            <Option value="BOTTOM_RIGHT">
+                              {t("superAdmin.objects.styleBottomRight")}
+                            </Option>
                           </Select>
                         </div>
                       </div>
