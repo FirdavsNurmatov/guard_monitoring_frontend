@@ -1,53 +1,54 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Timer, MapPin, Clock, User } from "lucide-react";
 import { Tooltip } from "react-leaflet";
 
-const STATUS_CONFIG = {
+const getStatusConfig = (t) => ({
   ON_TIME: {
     dot: "#00e896",
     glow: "0 0 6px #00e896",
     accent: "#00e896",
-    label: "VAQTIDA",
+    label: t("superAdmin.objects.onTime"),
   },
   LATE: {
     dot: "#f5b800",
     glow: "0 0 6px #f5b800",
     accent: "#f5b800",
-    label: "KECHIKDI",
+    label: t("superAdmin.objects.late"),
   },
   MISSED: {
     dot: "#ff3d5a",
     glow: "0 0 6px #ff3d5a",
     accent: "#ff3d5a",
-    label: "KELMADI",
+    label: t("superAdmin.objects.missed"),
   },
-};
+});
 
-const DEFAULT_CONFIG = {
+const getDefaultConfig = (t) => ({
   dot: "#9ca3af",
   glow: "none",
   accent: "#9ca3af",
-  label: "KUTILMOQDA",
-};
+  label: t("superAdmin.objects.pending"),
+});
 
 const LAYOUTS = {
   TOP: {
-    line: { w: 2, h: 18, b: 6, l: "50%", tx: "-50%" },
+    line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
     popup: { b: 28, l: "50%", tx: "-50%" },
     grad: "to top",
   },
   BOTTOM: {
-    line: { w: 2, h: 18, t: 6, l: "50%", tx: "-50%" },
+    line: { w: 8, h: 25, t: 6, l: "50%", tx: "-50%" },
     popup: { t: 28, l: "50%", tx: "-50%" },
     grad: "to bottom",
   },
   LEFT: {
-    line: { w: 18, h: 2, r: 6, t: "50%", ty: "-50%" },
+    line: { w: 25, h: 8, r: 6, t: "50%", ty: "-50%" },
     popup: { r: 28, t: "50%", ty: "-50%" },
     grad: "to left",
   },
   RIGHT: {
-    line: { w: 18, h: 2, l: 6, t: "50%", ty: "-50%" },
+    line: { w: 25, h: 8, l: 6, t: "50%", ty: "-50%" },
     popup: { l: 28, t: "50%", ty: "-50%" },
     grad: "to right",
   },
@@ -78,7 +79,7 @@ function useCountdown(log, cp) {
 
 const formatTime = (ts) => {
   const d = new Date(ts);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
 const injectTooltipReset = () => {
@@ -205,8 +206,11 @@ const PopupCard = React.memo(({ cp, latestLog, cfg, countdown }) => (
 
 export const CheckpointMarker = React.memo(
   ({ cp, latestLog, direction = "TOP", objectType = "IMAGE", style }) => {
+    const { t } = useTranslation();
     useEffect(() => injectTooltipReset(), []);
     const countdown = useCountdown(latestLog, cp);
+    const STATUS_CONFIG = getStatusConfig(t);
+    const DEFAULT_CONFIG = getDefaultConfig(t);
     const cfg = latestLog
       ? (STATUS_CONFIG[latestLog.status] ?? DEFAULT_CONFIG)
       : DEFAULT_CONFIG;
@@ -243,8 +247,8 @@ export const CheckpointMarker = React.memo(
               position: "absolute",
               inset: -4,
               borderRadius: "50%",
-              border: `1px solid ${cfg.dot}`,
-              opacity: 0.3,
+              border: `3px solid ${cfg.dot}`,
+              opacity: 1,
               animation: "cp-ping 2.2s cubic-bezier(0.4,0,0.6,1) infinite",
             }}
           />

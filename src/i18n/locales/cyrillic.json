@@ -378,8 +378,12 @@
       "add": "Қўшиш",
       "clickToAdd": "Расмга босиб қўшинг",
       "clickMapToAdd": "Харитага босиб қўшинг",
-      "noCheckpoints": "Ҳали текширув нуқталари йўқ",
-      "fillRequired": "Мажбурий майдонларни тўлдиринг"
+      "noCheckpoints": "Ҳали checkpoint йўқ",
+      "fillRequired": "Мажбурий майдонларни тўлдиринг",
+      "onTime": "Вақтида",
+      "late": "Кечикди",
+      "missed": "Келмади",
+      "pending": "Кутилмоқда"
     },
     "users": {
       "title": "Админлар",

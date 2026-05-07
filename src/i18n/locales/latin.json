@@ -394,7 +394,11 @@
       "clickToAdd": "Rasmga bosib qo'shing",
       "clickMapToAdd": "Xaritaga bosib qo'shing",
       "noCheckpoints": "Hali tekshiruv nuqtalari yo'q",
-      "fillRequired": "Majburiy maydonlarni to'ldiring"
+      "fillRequired": "Majburiy maydonlarni to'ldiring",
+      "onTime": "Vaqtida",
+      "late": "Kechikdi",
+      "missed": "Kelmadi",
+      "pending": "Kutilmoqda"
     },
     "users": {
       "title": "Adminlar",
