@@ -54,12 +54,12 @@ const LAYOUTS = {
   },
   TOP_LEFT: {
     line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
-    popup: { b: 28, l: "50%", tx: "-5%" },
+    popup: { b: 28, l: "50%", tx: "-95%" },
     grad: "to top",
   },
   TOP_RIGHT: {
     line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
-    popup: { b: 28, l: "50%", tx: "-95%" },
+    popup: { b: 28, l: "50%", tx: "-5%" },
     grad: "to top",
   },
   BOTTOM_LEFT: {
