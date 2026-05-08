@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Timer, MapPin, Clock, User } from "lucide-react";
 import { Tooltip } from "react-leaflet";
 // import L from "leaflet";
-
 // const checkpointCircleIcon = L.circle([41.5, 69.5], { radius: 50 });
-
 
 const getStatusConfig = (t) => ({
   ON_TIME: {
@@ -59,22 +57,22 @@ const LAYOUTS = {
 
   TOP_LEFT: {
     line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
-    popup: { b: 28, l: "50%", tx: "-95%" },
+    popup: { b: 28, l: "50%", tx: "-90%" },
     grad: "to top",
   },
   TOP_RIGHT: {
     line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
-    popup: { b: 28, l: "50%", tx: "-5%" },
+    popup: { b: 28, l: "50%", tx: "-10%" },
     grad: "to top",
   },
   BOTTOM_LEFT: {
     line: { w: 8, h: 25, t: 6, l: "50%", tx: "-50%" },
-    popup: { t: 28, l: "50%", tx: "-95%" },
+    popup: { t: 28, l: "50%", tx: "-90%" },
     grad: "to bottom",
   },
   BOTTOM_RIGHT: {
     line: { w: 8, h: 25, t: 6, l: "50%", tx: "-50%" },
-    popup: { t: 28, l: "50%", tx: "-5%" },
+    popup: { t: 28, l: "50%", tx: "-10%" },
     grad: "to bottom",
   },
 };
@@ -123,7 +121,7 @@ const PopupCard = React.memo(({ cp, latestLog, cfg, countdown }) => (
       borderLeft: `3px solid ${cfg.accent}`,
       borderRadius: 10,
       padding: "4px 6px",
-      minWidth: 180,
+      minWidth: 100,
       whiteSpace: "nowrap",
       boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
     }}
@@ -131,6 +129,7 @@ const PopupCard = React.memo(({ cp, latestLog, cfg, countdown }) => (
     <div
       style={{
         display: "flex",
+        flexDirection: countdown ? "row" : "column",
         alignItems: "center",
         justifyContent: "space-between",
         gap: 6,
@@ -148,7 +147,7 @@ const PopupCard = React.memo(({ cp, latestLog, cfg, countdown }) => (
             color: "#fff",
           }}
         >
-          {cp.name}
+          {cp.name.length > 5 ? cp.name.slice(0, 5) + "..." : cp.name}
         </span>
       </div>
       <span
@@ -243,7 +242,7 @@ export const CheckpointMarker = React.memo(
 
     const lineStyle = {
       position: "absolute",
-      background: `linear-gradient(${ly.grad}, transparent, ${cfg.dot})`,
+      background: `linear-gradient(${ly.grad}, ${cfg.dot})`,
       borderRadius: 2,
       transform: `translateX(${ly.line.tx || 0}) translateY(${ly.line.ty || 0})`,
     };
