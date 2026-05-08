@@ -17,7 +17,7 @@ const LanguageSwitcher = ({ size = "default", className = "" }) => {
     i18n.changeLanguage(language);
   };
 
-  const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
+  // const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>

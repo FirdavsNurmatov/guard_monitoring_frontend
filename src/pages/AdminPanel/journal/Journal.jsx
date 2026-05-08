@@ -19,12 +19,12 @@ const Journal = () => {
   const { t, i18n } = useTranslation();
   const { selectedMapId, setSelectedMapId } = useObjectStore();
 
-  const currentLocale =
-    i18n.language === "uz"
-      ? "uz-UZ"
-      : i18n.language === "ru"
-        ? "ru-RU"
-        : "en-US";
+  // const currentLocale =
+  //   i18n.language === "uz"
+  //     ? "uz-UZ"
+  //     : i18n.language === "ru"
+  //       ? "ru-RU"
+  //       : "en-US";
 
   // Initialize search state from localStorage with defaults
   const [selectedDate, setSelectedDate] = useState(() => {

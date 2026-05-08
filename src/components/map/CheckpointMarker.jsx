@@ -2,6 +2,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Timer, MapPin, Clock, User } from "lucide-react";
 import { Tooltip } from "react-leaflet";
+// import L from "leaflet";
+
+// const checkpointCircleIcon = L.circle([41.5, 69.5], { radius: 50 });
+
 
 const getStatusConfig = (t) => ({
   ON_TIME: {
@@ -52,6 +56,7 @@ const LAYOUTS = {
     popup: { l: 28, t: "50%", ty: "-50%" },
     grad: "to right",
   },
+
   TOP_LEFT: {
     line: { w: 8, h: 25, b: 6, l: "50%", tx: "-50%" },
     popup: { b: 28, l: "50%", tx: "-95%" },
@@ -298,7 +303,7 @@ export const CheckpointMarker = React.memo(
     );
 
     return objectType === "MAP" ? (
-      <Tooltip direction={direction.toLowerCase()} permanent>
+      <Tooltip direction="center" permanent>
         {Inner}
       </Tooltip>
     ) : (

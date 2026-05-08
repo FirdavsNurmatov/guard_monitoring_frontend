@@ -21,12 +21,13 @@ const Users = () => {
   const { t, i18n } = useTranslation();
 
   // Get current locale based on language
-  const currentLocale =
-    i18n.language === "uz"
-      ? "uz-UZ"
-      : i18n.language === "ru"
-        ? "ru-RU"
-        : "en-US";
+  // const currentLocale =
+  //   i18n.language === "uz"
+  //     ? "uz-UZ"
+  //     : i18n.language === "ru"
+  //       ? "ru-RU"
+  //       : "en-US";
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 

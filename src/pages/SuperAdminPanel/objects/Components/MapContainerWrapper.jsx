@@ -1,14 +1,7 @@
-import { useEffect, useRef, useMemo, useCallback, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Tooltip,
-  useMapEvents,
-} from "react-leaflet";
+import { useEffect, useRef, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { renderToStaticMarkup } from "react-dom/server";
 
 // --- Object (qizil) marker ---
 const objectIcon = L.icon({

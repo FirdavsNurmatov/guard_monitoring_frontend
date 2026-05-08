@@ -28,12 +28,12 @@ export default function Dashboard() {
   const { t, i18n } = useTranslation();
 
   // Get current locale based on language
-  const currentLocale =
-    i18n.language === "uz"
-      ? "uz-UZ"
-      : i18n.language === "ru"
-        ? "ru-RU"
-        : "en-US";
+  // const currentLocale =
+  //   i18n.language === "uz"
+  //     ? "uz-UZ"
+  //     : i18n.language === "ru"
+  //       ? "ru-RU"
+  //       : "en-US";
   const [socket, setSocket] = useState(null);
   const [maps, setMaps] = useState([]); // 🔹 barcha obyektlar
   const [selectedMap, setSelectedMap] = useState(null); // 🔹 tanlangan obyekt
@@ -60,7 +60,7 @@ export default function Dashboard() {
     setObjectType,
   } = useObjectStore((store) => store);
 
-  const audioRef = useRef(null);
+  // const audioRef = useRef(null);
 
   const handleLogReceived = useCallback((formattedLog, log) => {
     setLogs((prev) => [formattedLog, ...prev].slice(0, 50));

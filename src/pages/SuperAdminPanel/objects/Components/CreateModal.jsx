@@ -258,8 +258,8 @@ const CreateModal = ({ open, onClose, fetchObjects }) => {
                 },
               }}
             >
-              <Tooltip direction="top" offset={[0, -10]} permanent interactive>
-                <span className="text-xs">{cp.name || `${i + 1}-punkt`}</span>
+              <Tooltip direction="center" permanent>
+                <span className="text-xs bg-white rounded px-2 py-1">{cp.name || `${i + 1}-punkt`}</span>
               </Tooltip>
             </Marker>
           ) : null,
