@@ -118,7 +118,8 @@
     "invalidCredentials": "Неверное имя пользователя или пароль",
     "userNotFound": "Пользователь не найден",
     "inactiveOrganization": "Организация неактивна",
-    "requiredField": "Это поле обязательно"
+    "requiredField": "Это поле обязательно",
+    "tooManyAttempts": "Слишком много попыток, попробуйте через 10 секунд"
   },
   "messages": {
     "saveSuccess": "Данные успешно сохранены",
