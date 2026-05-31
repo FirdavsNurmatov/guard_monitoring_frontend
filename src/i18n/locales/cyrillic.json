@@ -244,8 +244,8 @@
     "total": "Жами: {{count}} та"
   },
   "usersPage": {
-    "title":"Бошқарув панели",
-    "subtitle":"Админлар",
+    "title": "Бошқарув панели",
+    "subtitle": "Админлар",
     "addUser": "Фойдаланувчи қўшиш",
     "editUser": "Фойдаланувчини таҳрирлаш",
     "userDetails": "Фойдаланувчи маълумотлари",
@@ -263,6 +263,10 @@
     "newUser": "Янги фойдаланувчи қўшиш",
     "password": "Парол",
     "newPassword": "Янги парол",
+    "passwordChange": {
+      "guardPlaceholder": "6 та сон киритинг",
+      "placeholder": "Паролни киритинг"
+    },
     "enterLogin": "Логинни киритинг",
     "enterPassword": "Паролни киритинг",
     "selectRole": "Ролни танланг",

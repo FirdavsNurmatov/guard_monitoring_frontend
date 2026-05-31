@@ -1,5 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
+import { useObjectStore } from "../../../store/useObjectStore";
+import { formatDate } from "../../../utils/dateFormat";
+import LocationMapModal from "./component/LocationMapModal";
+import { useGetJournalLogs } from "../../../services/query/AdminPanel/Journal/useGetJournalLogs";
 import { instance } from "../../../config/axios-instance";
+import { useEffect, useState, useMemo } from "react";
 import { DatePicker, Table, ConfigProvider, Button, Select } from "antd";
 import {
   SearchOutlined,
@@ -7,24 +11,14 @@ import {
   EnvironmentOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-import { useObjectStore } from "../../../store/useObjectStore";
-import { formatDate } from "../../../utils/dateFormat";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
-import LocationMapModal from "./component/LocationMapModal";
 import "./Journal.css";
 
 const Journal = () => {
   const { t, i18n } = useTranslation();
   const { selectedMapId, setSelectedMapId } = useObjectStore();
-
-  // const currentLocale =
-  //   i18n.language === "uz"
-  //     ? "uz-UZ"
-  //     : i18n.language === "ru"
-  //       ? "ru-RU"
-  //       : "en-US";
 
   // Initialize search state from localStorage with defaults
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -32,9 +26,14 @@ const Journal = () => {
     return saved ? dayjs(saved) : dayjs();
   });
 
+  // dateRange state init - JSON.parse dan keyin dayjs ga convert qilish
   const [dateRange, setDateRange] = useState(() => {
     const saved = localStorage.getItem("journalDateRange");
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    if (!parsed) return null;
+    // String larni dayjs objectga qaytarish
+    return [dayjs(parsed[0]), dayjs(parsed[1])];
   });
 
   const [pickerMode, setPickerMode] = useState(() => {
@@ -45,11 +44,8 @@ const Journal = () => {
     return localStorage.getItem("journalHasSearched") === "true";
   });
 
-  const [journalLogs, setJournalLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchLoading, setSearchLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [exportPeriod, setExportPeriod] = useState("day");
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -66,100 +62,31 @@ const Journal = () => {
     localStorage.setItem("journalPickerMode", pickerMode);
   }, [hasSearched, selectedDate, dateRange, pickerMode]);
 
-  const fetchJournalLogs = async (currentPage = 1) => {
-    if (!selectedMapId) return;
-
-    try {
-      let url;
-
-      if (hasSearched && (selectedDate || dateRange)) {
-        // Use filtered API when search is performed
-        if (pickerMode === "range" && dateRange) {
-          // Range mode - send custom start and end dates without period
-          const startDate = dayjs(dateRange[0]).format("YYYY-MM-DD");
-          const endDate = dayjs(dateRange[1]).format("YYYY-MM-DD");
-          url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&page=${currentPage}&limit=30&startDate=${startDate}&endDate=${endDate}`;
-        } else if (selectedDate) {
-          // Day/Week/Month mode - use period
-          const period =
-            pickerMode === "date"
-              ? "daily"
-              : pickerMode === "week"
-                ? "weekly"
-                : "monthly";
-          url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&page=${currentPage}&limit=30&period=${period}`;
-
-          const startDate = selectedDate
-            .startOf(
-              pickerMode === "date"
-                ? "day"
-                : pickerMode === "week"
-                  ? "week"
-                  : "month",
-            )
-            .format("YYYY-MM-DD");
-          const endDate = selectedDate
-            .endOf(
-              pickerMode === "date"
-                ? "day"
-                : pickerMode === "week"
-                  ? "week"
-                  : "month",
-            )
-            .format("YYYY-MM-DD");
-          url += `&startDate=${startDate}&endDate=${endDate}`;
-        }
-      } else {
-        // Use regular API for general data with pagination
-        url = `/admin/monitoringLogs?objectId=${selectedMapId}&page=${currentPage}&limit=30`;
-      }
-
-      const res = await instance.get(url);
-      const data = res?.data?.items || res?.data || [];
-      const formattedLogs = data.map((log) => {
-        return {
-          id: log.id,
-          guard: log.user?.username || log.user?.login,
-          checkpoint: log.checkpoint?.name || "-",
-          checkpointLocation: log.checkpoint?.location || null,
-          createdAtRaw: new Date(log.createdAt),
-          status: log.status,
-          location: log.location || null,
-          distance: log?.distance,
-        };
-      });
-      setJournalLogs(formattedLogs);
-      setTotal(res?.data?.total || data.length || 0);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching journal logs:", error);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJournalLogs(page);
-  }, [page, selectedMapId, hasSearched]);
+  const { data, isLoading, refetch } = useGetJournalLogs({
+    selectedMapId,
+    page,
+    hasSearched,
+    pickerMode,
+    selectedDate,
+    dateRange,
+  });
 
   const sortedJournalLogs = useMemo(() => {
-    return [...journalLogs].sort((a, b) => b.createdAtRaw - a.createdAtRaw);
-  }, [journalLogs]);
-
-  const filteredTotal = total;
+    return [...(data?.logs || [])].sort(
+      (a, b) => b.createdAtRaw - a.createdAtRaw,
+    );
+  }, [data?.logs]);
 
   const handleSearch = () => {
     setSearchLoading(true);
     setHasSearched(true);
     setPage(1);
-    setLoading(true);
-    fetchJournalLogs(1);
-    setTimeout(() => {
-      setSearchLoading(false);
-    }, 300);
+    refetch();
+    setTimeout(() => setSearchLoading(false), 300);
   };
 
   const handleClear = () => {
-    setSelectedDate(null);
+    setSelectedDate(dayjs());
     setDateRange(null);
     setHasSearched(false);
     setPage(1);
@@ -169,59 +96,58 @@ const Journal = () => {
     if (!selectedMapId) return;
 
     try {
-      let url;
+      let startDate, endDate;
       const now = dayjs();
 
-      if (exportPeriod === "day") {
-        const startDate = now.startOf("day").format("YYYY-MM-DD");
-        const endDate = now.endOf("day").format("YYYY-MM-DD");
-        url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
-      } else if (exportPeriod === "week") {
-        const startDate = now.startOf("week").format("YYYY-MM-DD");
-        const endDate = now.endOf("week").format("YYYY-MM-DD");
-        url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
-      } else if (exportPeriod === "month") {
-        const startDate = now.startOf("month").format("YYYY-MM-DD");
-        const endDate = now.endOf("month").format("YYYY-MM-DD");
-        url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
+      if (pickerMode === "range") {
+        if (!dateRange?.[0] || !dateRange?.[1]) {
+          toast.error(t("messages.selectDateFirst"));
+          return;
+        }
+        startDate = dateRange[0].startOf("day").format("YYYY-MM-DD");
+        endDate = dateRange[1].endOf("day").format("YYYY-MM-DD");
+      } else {
+        const base = selectedDate || now;
+        const unit = pickerMode === "date" ? "day" : pickerMode; // "date" → "day"
+        startDate = base.startOf(unit).format("YYYY-MM-DD");
+        endDate = base.endOf(unit).format("YYYY-MM-DD");
       }
 
+      const url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
       const res = await instance.get(url);
-      const data = res?.data?.items || res?.data || [];
+      const data = res?.data?.items;
 
       if (data.length === 0) {
         toast.error(t("messages.noDataToExport"));
         return;
       }
 
-      const exportData = data.map((log) => {
-        return {
-          [t("dashboardPage.username")]:
-            log.user?.username || log.user?.login || "-",
-          [t("dashboardPage.checkpointName")]: log.checkpoint?.name || "-",
-          [t("dashboardPage.arrivalDate")]: formatDate(
-            new Date(log.createdAt),
-            true,
-          ),
-          [t("dashboardPage.status")]:
-            log.status === "ON_TIME"
-              ? t("dashboardPage.onTimeStatus")
-              : log.status === "LATE"
-                ? t("dashboardPage.lateStatus")
-                : t("dashboardPage.veryLateStatus"),
-          [t("dashboardPage.latitude")]: log.location?.latitude || "-",
-          [t("dashboardPage.longitude")]: log.location?.longitude || "-",
-          [t("dashboardPage.distance")]:
-            log?.distance !== null && log?.distance !== undefined
-              ? `${log.distance} m`
-              : "-",
-        };
-      });
+      const exportData = data.map((log) => ({
+        [t("dashboardPage.username")]:
+          log.user?.username || log.user?.login || "-",
+        [t("dashboardPage.checkpointName")]: log.checkpoint?.name || "-",
+        [t("dashboardPage.arrivalDate")]: formatDate(
+          new Date(log.createdAt),
+          true,
+        ),
+        [t("dashboardPage.status")]:
+          log.status === "ON_TIME"
+            ? t("dashboardPage.onTimeStatus")
+            : log.status === "LATE"
+              ? t("dashboardPage.lateStatus")
+              : t("dashboardPage.veryLateStatus"),
+        [t("dashboardPage.latitude")]: log.location?.latitude || "-",
+        [t("dashboardPage.longitude")]: log.location?.longitude || "-",
+        [t("dashboardPage.distance")]:
+          log?.distance !== null && log?.distance !== undefined
+            ? `${log.distance} m`
+            : "-",
+      }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Journal");
-      const fileName = `journal_${exportPeriod}_${now.format("YYYY-MM-DD")}.xlsx`;
+      const fileName = `journal_${startDate}_${endDate}.xlsx`;
       XLSX.writeFile(workbook, fileName);
     } catch (error) {
       console.error("Error exporting to Excel:", error);
@@ -404,36 +330,10 @@ const Journal = () => {
               <span className="text-gray-400 text-sm font-medium">
                 {t("common.excel")}:
               </span>
-              <ConfigProvider
-                theme={{
-                  token: {
-                    colorPrimary: "#10b981",
-                    colorText: "white",
-                    colorTextPlaceholder: "rgba(255, 255, 255, 0.5)",
-                    colorBorder: "#10b981",
-                    colorBgContainer: "rgba(16, 185, 129, 0.1)",
-                  },
-                }}
-              >
-                <Select
-                  value={exportPeriod}
-                  onChange={(value) => {
-                    setExportPeriod(value);
-                  }}
-                  className="dark-select"
-                  style={{ width: 120 }}
-                  options={[
-                    { label: t("common.day"), value: "day" },
-                    { label: t("common.week"), value: "week" },
-                    { label: t("common.month"), value: "month" },
-                  ]}
-                />
-              </ConfigProvider>
               <Button
                 type="primary"
                 icon={<DownloadOutlined />}
                 onClick={handleExportToExcel}
-                className="bg-emerald-500 hover:bg-emerald-600 border-emerald-500 text-white"
                 style={{
                   backgroundColor: "#10b981",
                   borderColor: "#10b981",
@@ -478,7 +378,7 @@ const Journal = () => {
                   }}
                   className="dark-select"
                   placeholder={getPickerPlaceholder()}
-                  popupClassName="dark-picker"
+                  classNames={{ popup: { root: "dark-picker" } }} // ✅ o'zgartirildi
                   format={getPickerFormat()}
                 />
               ) : (
@@ -535,10 +435,10 @@ const Journal = () => {
               className: "dark-pagination pagination-dark",
               pageSize: 30,
               current: page,
-              total: filteredTotal,
+              total: data?.total || 0,
               onChange: (page) => setPage(page),
             }}
-            loading={loading}
+            loading={isLoading}
             className="dark-table table-large"
             size="medium"
             scroll={{ y: 520 }}

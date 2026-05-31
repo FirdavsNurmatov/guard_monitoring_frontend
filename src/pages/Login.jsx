@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Eye, EyeOff, Shield } from "lucide-react";
-import { instance } from "../config/axios-instance";
 import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import { useObjectStore } from "../store/useObjectStore";
+import { useLogin } from "../services/mutation/useLogin";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -16,7 +16,9 @@ export default function Login() {
 
   const navigate = useNavigate();
   const { setUser, setToken, resetAuth } = useAuthStore((store) => store);
-  const resetObjectSettings = useObjectStore((state) => state.resetObjectSettings);
+  const resetObjectSettings = useObjectStore(
+    (state) => state.resetObjectSettings,
+  );
 
   const [formData, setFormData] = useState({
     login: "",
@@ -24,10 +26,11 @@ export default function Login() {
     rememberMe: false,
   });
 
+  const { mutate } = useLogin();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     setApiError("");
     resetObjectSettings();
     resetAuth();
@@ -39,48 +42,44 @@ export default function Login() {
     localStorage.removeItem("journalPickerMode");
     localStorage.removeItem("journalSelectedDate");
 
-    try {
-      const res = await instance.post("/auth/login", {
-        login: formData.login,
-        password: formData.password,
-      });
+    mutate(
+      { login: formData.login, password: formData.password },
+      {
+        onSuccess: (data) => {
+          const accessToken = data?.data?.access_token;
+          const role = data?.data?.role;
 
-      const data = res.data?.data;
-      const accessToken = data?.access_token;
-      const role = data?.role;
+          if (!["SUPERADMIN", "ADMIN", "OPERATOR"].includes(role)) {
+            setApiError(t("errors.accessDenied"));
+            return;
+          }
 
-      if (!["SUPERADMIN", "ADMIN", "OPERATOR"].includes(role)) {
-        throw new Error("Access denied");
-      }
+          setUser({ username: data?.username, role });
+          setToken(accessToken);
+          Cookies.set("accessToken", accessToken);
 
-      setUser({
-        username: data?.username,
-        role,
-      });
+          if (role === "SUPERADMIN") {
+            navigate("/superadmin", { replace: true });
+          } else {
+            navigate("/monitoring", { replace: true });
+          }
+        },
+        onError: (error) => {
+          const message = error?.response?.data?.message || "";
 
-      setToken(accessToken);
-      Cookies.set("accessToken", accessToken);
-
-      if (role === "SUPERADMIN") {
-        return navigate("/superadmin", { replace: true });
-      } else {
-        return navigate("/monitoring", { replace: true });
-      }
-    } catch (error) {
-      const message = error?.response?.data?.message || "";
-
-      if (message.includes("incorrect")) {
-        setApiError(t("errors.invalidCredentials"));
-      } else if (message.includes("found")) {
-        setApiError(t("errors.userNotFound"));
-      } else if (message.includes("inactive")) {
-        setApiError(t("errors.inactiveOrganization"));
-      } else {
-        setApiError(message || t("errors.serverError"));
-      }
-    } finally {
-      setLoading(false);
-    }
+          if (message.includes("incorrect")) {
+            setApiError(t("errors.invalidCredentials"));
+          } else if (message.includes("found")) {
+            setApiError(t("errors.userNotFound"));
+          } else if (message.includes("inactive")) {
+            setApiError(t("errors.inactiveOrganization"));
+          } else {
+            setApiError(message || t("errors.serverError"));
+          }
+        },
+        onSettled: () => setLoading(false), // ✅ loading stops after mutation finishes
+      },
+    );
   };
 
   return (

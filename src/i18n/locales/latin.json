@@ -278,6 +278,10 @@
     "newUser": "Yangi foydalanuvchi qo'shish",
     "password": "Parol",
     "newPassword": "Yangi parol",
+    "passwordChange": {
+      "guardPlaceholder": "6 ta son kiriting",
+      "placeholder": "Parolni kiriting"
+    },
     "enterLogin": "Loginni kiriting",
     "enterPassword": "Parolni kiriting",
     "selectRole": "Rolni tanlang",

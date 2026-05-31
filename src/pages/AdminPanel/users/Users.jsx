@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { instance } from "../../../config/axios-instance";
 import {
   Button,
   Descriptions,
@@ -14,22 +13,17 @@ import {
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Trash2, Edit, Eye, PowerOff } from "lucide-react";
-import "./Users.css";
+import { instance } from "../../../config/axios-instance";
 import { formatDate } from "../../../utils/dateFormat";
+import { useGetUsers } from "../../../services/query/AdminPanel/Users/useGetUsers";
+import { useCreateUser } from "../../../services/mutation/AdminPanel/Users/useCreateUser";
+import { useDeleteUser } from "../../../services/mutation/AdminPanel/Users/useDeleteUser";
+import { useInactivateUser } from "../../../services/mutation/AdminPanel/Users/useInactivateUser";
+import { useEditUser } from "../../../services/mutation/AdminPanel/Users/useEditUser";
+import "./Users.css";
 
 const Users = () => {
   const { t, i18n } = useTranslation();
-
-  // Get current locale based on language
-  // const currentLocale =
-  //   i18n.language === "uz"
-  //     ? "uz-UZ"
-  //     : i18n.language === "ru"
-  //       ? "ru-RU"
-  //       : "en-US";
-
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -39,69 +33,55 @@ const Users = () => {
   const [form] = Form.useForm();
   const [selectedRole, setSelectedRole] = useState(null);
 
-  useEffect(() => {
-    const getUsers = async () => {
-      try {
-        const res = await instance.get("/admin/users");
-        setData(res.data);
-        setLoading(false);
-      } catch (error) {
-        toast.error(t("messages.loadUsersError"));
-      }
-    };
-    getUsers();
-  }, [loading]);
+  const { data, isPending } = useGetUsers({
+    onError: () => toast.error(t("messages.loadUsersError")),
+  });
 
-  const handleCreate = async (values) => {
-    try {
-      await instance.post("/user", values);
+  const { mutate: createUser } = useCreateUser({
+    onSuccess: () => {
       toast.success(t("messages.userCreated"));
       setIsFormModalOpen(false);
       form.resetFields();
-      setLoading(true);
-    } catch (error) {
-      // console.log(error?.response?.data?.message);
-      let errText = "";
-      if (error?.response?.data?.message.includes("duplicate"))
-        errText = t("errors.duplicateLogin");
-      toast.error(errText || t("messages.createUserError"));
-    }
-  };
+    },
+    onError: (error) => {
+      const errText = error?.response?.data?.message?.includes("duplicate")
+        ? t("errors.duplicateLogin")
+        : t("messages.createUserError");
+      toast.error(errText);
+    },
+  });
 
-  const handleEdit = async (values) => {
-    try {
-      await instance.patch("/user/" + selected.id, values);
+  const { mutate: editUser } = useEditUser({
+    onSuccess: () => {
       toast.success(t("messages.userUpdated"));
       setIsFormModalOpen(false);
       form.resetFields();
-      setLoading(true);
-    } catch (error) {
-      let errText = "";
-      if (error?.response?.data?.message.includes("duplicate"))
-        errText = t("errors.duplicateLogin");
-      toast.error(errText || t("messages.updateUserError"));
-    }
-  };
+    },
+    onError: (error) => {
+      const errText = error?.response?.data?.message?.includes("duplicate")
+        ? t("errors.duplicateLogin")
+        : t("messages.updateUserError");
+      toast.error(errText);
+    },
+  });
 
-  const handleInactive = async (id) => {
-    try {
-      await instance.delete("/user/" + id);
-      toast.success(t("messages.userDeactivated"));
-      setLoading(true);
-    } catch (error) {
-      toast.error(t("messages.deactivateUserError"));
-    }
-  };
+  const { mutate: inactiveUser } = useInactivateUser({
+    onSuccess: () => toast.success(t("messages.userDeactivated")),
+    onError: () => toast.error(t("messages.deactivateUserError")),
+  });
 
-  const handleDelete = async (id) => {
-    try {
-      await instance.delete("/user/delete/" + id);
-      toast.success(t("messages.userDeleted"));
-      setLoading(true);
-    } catch (error) {
-      toast.error(t("messages.deleteUserError"));
-    }
+  const { mutate: deleteUser } = useDeleteUser({
+    onSuccess: () => toast.success(t("messages.userDeleted")),
+    onError: () => toast.error(t("messages.deleteUserError")),
+  });
+
+  // Ishlatish
+  const handleSubmit = (values) => {
+    if (formMode === "create") createUser(values);
+    else editUser({ id: selected.id, values });
   };
+  const handleDelete = (id) => deleteUser(id);
+  const handleInactive = (id) => inactiveUser(id);
 
   const userColumns = [
     { title: t("usersPage.id"), dataIndex: "id" },
@@ -236,7 +216,7 @@ const Users = () => {
               showTotal: (total) => t("pagination.total", { count: total }),
               className: "dark-pagination pagination-dark",
             }}
-            loading={loading}
+            loading={isPending}
             className="dark-table table-large"
             size="middle"
             rowClassName={() => "dark-table-row"}
@@ -262,15 +242,17 @@ const Users = () => {
             bordered
             column={1}
             className="dark-descriptions"
-            labelStyle={{
-              backgroundColor: "#1f2937",
-              color: "#9ca3af",
-              borderColor: "#374151",
-            }}
-            contentStyle={{
-              backgroundColor: "#111827",
-              color: "#f3f4f6",
-              borderColor: "#374151",
+            styles={{
+              label: {
+                backgroundColor: "#1f2937",
+                color: "#9ca3af",
+                borderColor: "#374151",
+              },
+              content: {
+                backgroundColor: "#111827",
+                color: "#f3f4f6",
+                borderColor: "#374151",
+              },
             }}
           >
             <Descriptions.Item label={t("usersPage.login")}>
@@ -313,9 +295,7 @@ const Users = () => {
         <Form
           form={form}
           layout="vertical"
-          onFinish={(values) =>
-            formMode === "create" ? handleCreate(values) : handleEdit(values)
-          }
+          onFinish={handleSubmit}
           className="dark-form"
         >
           <Form.Item
@@ -435,8 +415,8 @@ const Users = () => {
                   maxLength={selected?.role === "GUARD" ? 6 : undefined}
                   placeholder={
                     selected?.role === "GUARD"
-                      ? "6 ta raqam"
-                      : t("passwordChange.placeholder")
+                      ? t('usersPage.passwordChange.guardPlaceholder')
+                      : t("usersPage.passwordChange.placeholder")
                   }
                   className="bg-gray-800 border-gray-600 text-white placeholder-gray-500"
                 />
@@ -461,11 +441,7 @@ const Users = () => {
             </>
           )}
           <Form.Item>
-            <Button
-              htmlType="submit"
-              block
-              className="btn-create"
-            >
+            <Button htmlType="submit" block className="btn-create">
               {formMode === "create" ? t("common.add") : t("common.save")}
             </Button>
           </Form.Item>

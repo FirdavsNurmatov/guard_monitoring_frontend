@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   UsergroupAddOutlined,
   LogoutOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -88,7 +89,7 @@ export default function MainLayout() {
               },
               {
                 key: "2",
-                icon: <DashboardOutlined className="w-5 h-5" />,
+                icon: <SolutionOutlined className="w-5 h-5" />,
                 label: (
                   <Link
                     to="/admin/journal"

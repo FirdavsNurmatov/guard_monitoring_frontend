@@ -31,7 +31,7 @@ export const useNotificationHandler = (socket, selectedMap, i18n, t, onLogReceiv
 
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch((err) => {
-        console.log("Audio blocked:", err);
+        // console.log("Audio blocked:", err);
       });
 
       const statusText =

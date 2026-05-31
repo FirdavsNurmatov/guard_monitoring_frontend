@@ -13,6 +13,10 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Shield, Image, FileText, Map, LayoutDashboard } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { useGetObjects } from "../../services/query/AdminPanel/Dashboard/useGetObjects.js";
+import { useGetObjectById } from "../../services/query/AdminPanel/Dashboard/useGetObjectById.js";
+import { useGetLogs } from "../../services/query/AdminPanel/Dashboard/useGetLogs.js";
+import { useGetJournalLogs } from "../../services/query/AdminPanel/Dashboard/useGetJournalLogs.js";
 
 // Pulse animation for live indicator
 const LiveIndicator = () => (
@@ -24,32 +28,21 @@ const LiveIndicator = () => (
 
 const { Option } = Select;
 
+const baseUrl = import.meta.env.VITE_SERVER_PORT;
+
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
-
-  // Get current locale based on language
-  // const currentLocale =
-  //   i18n.language === "uz"
-  //     ? "uz-UZ"
-  //     : i18n.language === "ru"
-  //       ? "ru-RU"
-  //       : "en-US";
   const [socket, setSocket] = useState(null);
-  const [maps, setMaps] = useState([]); // 🔹 barcha obyektlar
   const [selectedMap, setSelectedMap] = useState(null); // 🔹 tanlangan obyekt
-  const [loading, setLoading] = useState(true);
   const [guards, setGuards] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [journalLogs, setJournalLogs] = useState([]);
   const [journal, setJournal] = useState(false);
+  const [journalLogs, setJournalLogs] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [gpsPoints, setGpsPoints] = useState([]);
   const mapWrapperRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const baseUrl = import.meta.env.VITE_SERVER_PORT;
-  const navigate = useNavigate();
   const { user } = useAuthStore((store) => store);
   const {
     selectedMapId,
@@ -59,6 +52,7 @@ export default function Dashboard() {
     setMapType,
     setObjectType,
   } = useObjectStore((store) => store);
+  const navigate = useNavigate();
 
   // const audioRef = useRef(null);
 
@@ -119,103 +113,92 @@ export default function Dashboard() {
     }
   }, []);
 
-  const fetchAllMaps = useCallback(async () => {
-    try {
-      const res = await instance.get("/object");
-      setMaps(res.data || []);
-    } catch (err) {
-      toast.error(t("dashboardPage.loadObjectsError"));
+  const { data: maps = [], isError: isGetObjectsError } = useGetObjects();
+
+  useEffect(() => {
+    if (isGetObjectsError) toast.error(t("dashboardPage.loadObjectsError"));
+  }, [isGetObjectsError]);
+
+  useEffect(() => {
+    if (maps.length > 0 && !selectedMapId) {
+      setSelectedMapId(maps[0].id);
     }
-  }, [t]);
+  }, [maps]);
+
+  const {
+    data: objectData,
+    isError: objectError,
+    isLoading,
+  } = useGetObjectById(selectedMapId);
+
+  useEffect(() => {
+    if (objectData) {
+      setSelectedMap({
+        ...objectData,
+        imageUrl: `${baseUrl}${objectData.imageUrl}`,
+      });
+    }
+  }, [objectData]);
+
+  useEffect(() => {
+    if (objectError) toast.error(t("dashboardPage.loadObjectError"));
+  }, [objectError]);
 
   // 🟢 Loglarni olish
-  const fetchInitialLogs = useCallback(
-    async (objectId) => {
-      try {
-        const res = await instance.get(
-          `/admin/logs?limit=50&objectId=${objectId}`,
-        );
-        const data = res?.data?.data || [];
+  const { data: logsData = [] } = useGetLogs(selectedMapId);
 
-        const formattedLogs = data.map((log) => ({
-          id: log.id,
-          guard: log.user?.username || log.user?.login,
-          checkpoint: log.checkpoint?.name || "-",
-          status: log.status,
-          createdAt: new Date(log.createdAt).toLocaleTimeString(),
-          createdAtRaw: new Date(log.createdAt),
-          zoneId: log.checkpoint?.id,
-          userId: log.userId,
-        }));
-
-        setLogs(formattedLogs);
-
-        const guardsArr = [];
-        data.forEach((log) => {
-          if (!log.userId) return;
-          if (!guardsArr.some((g) => g.guardId === log.userId)) {
-            guardsArr.push({
-              guardId: log.userId,
-              login: log.user?.login,
-              username: log.user?.username,
-              checkpointName: log.checkpoint?.name,
-              status: log.status,
-            });
-          }
-        });
-
-        setGuards(guardsArr);
-      } catch {
-        toast.error(t("dashboardPage.loadLogsError"));
-      }
-    },
-    [t],
-  );
-
-  const handleSelectMap = useCallback(
-    async (id) => {
-      setLoading(true);
-      setSelectedMapId(id); // Store ga saqlash
-      try {
-        const res = await instance.get(`/object/${id}`);
-        setSelectedMap({
-          ...res.data,
-          imageUrl: `${baseUrl}${res.data.imageUrl}`,
-        });
-        await fetchInitialLogs(id);
-      } catch (err) {
-        toast.error(t("dashboardPage.loadObjectError"));
-      } finally {
-        setLoading(false);
-      }
-    },
-    [baseUrl, fetchInitialLogs, t],
-  );
-
-  // JournalLogs
   useEffect(() => {
-    if (!journal) return; // modal yopiq bo‘lsa fetch bo‘lmaydi
+    if (!logsData.length) return;
 
-    const fetchLogs = async () => {
-      const res = await instance.get(
-        `/admin/monitoringLogs?objectId=${selectedMap.id}&page=${page}&limit=30`,
-      );
-      const data = res?.data?.items || [];
+    setLogs(
+      logsData.map((log) => ({
+        id: log.id,
+        guard: log.user?.username || log.user?.login,
+        checkpoint: log.checkpoint?.name || "-",
+        status: log.status,
+        createdAt: new Date(log.createdAt).toLocaleTimeString(),
+        createdAtRaw: new Date(log.createdAt),
+        zoneId: log.checkpoint?.id,
+        userId: log.userId,
+      })),
+    );
 
-      const formattedJournalLogs = data.map((log) => ({
+    const guardsArr = [];
+    logsData.forEach((log) => {
+      if (!log.userId) return;
+      if (!guardsArr.some((g) => g.guardId === log.userId)) {
+        guardsArr.push({
+          guardId: log.userId,
+          login: log.user?.login,
+          username: log.user?.username,
+          checkpointName: log.checkpoint?.name,
+          status: log.status,
+        });
+      }
+    });
+    setGuards(guardsArr);
+  }, [logsData]);
+
+  // ✅ useGetJournalLogs
+  const { data: journalData } = useGetJournalLogs({
+    objectId: selectedMap?.id,
+    page,
+    enabled: journal,
+  });
+
+  useEffect(() => {
+    if (!journalData) return;
+    setJournalLogs(
+      journalData.items.map((log) => ({
         id: log.id,
         guard: log.user?.username || log.user?.login,
         checkpoint: log.checkpoint?.name || "-",
         createdAtRaw: new Date(log.createdAt),
         status: log.status,
-      }));
-
-      setJournalLogs(formattedJournalLogs);
-      setTotal(res?.data?.total || 0); // pagination uchun total
-    };
-
-    fetchLogs();
-  }, [journal, page]);
+      })),
+    );
+    setTotal(journalData.total || 0);
+  }, [journalData]);
 
   useEffect(() => {
     // Socket ulanishini yaratish
@@ -236,23 +219,6 @@ export default function Dashboard() {
       newSocket.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    const init = async () => {
-      await fetchAllMaps();
-    };
-    init();
-  }, []);
-
-  useEffect(() => {
-    if (maps.length > 0 && !selectedMap) {
-      // Store dan saqlangan obyekt ID sini olish
-      const mapId = selectedMapId || maps[0].id;
-      handleSelectMap(mapId);
-    } else if (maps.length > 0 && selectedMap) {
-      handleSelectMap(selectedMap?.id);
-    }
-  }, [maps, selectedMapId]); // 🟢 selectedMapId ni ham qo'shish
 
   useEffect(() => {
     toast.dismiss();
@@ -278,9 +244,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!socket) return;
-
     socket.on("gps", handleGps);
-
     return () => {
       socket.off("gps", handleGps);
     };
@@ -289,7 +253,6 @@ export default function Dashboard() {
   // 🔥 Eng so‘nggi loglarni zoneId bo‘yicha map qilib olamiz
   const latestLogsByZone = useMemo(() => {
     const map = {};
-
     for (const log of logs) {
       const existing = map[log.zoneId];
 
@@ -297,7 +260,6 @@ export default function Dashboard() {
         map[log.zoneId] = log;
       }
     }
-
     return map;
   }, [logs]);
 
@@ -373,9 +335,7 @@ export default function Dashboard() {
                   className="select-green"
                   style={{ width: 160 }}
                   onChange={(id) => {
-                    const map = maps.find((m) => m.id === id);
-                    setSelectedMap(map);
-                    handleSelectMap(id);
+                    setSelectedMapId(id);
                   }}
                 >
                   {maps.map((item) => (
@@ -415,7 +375,7 @@ export default function Dashboard() {
             </div>
 
             {/* Stats */}
-            {!loading && selectedMap && (
+            {!isLoading && selectedMap && (
               <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-700/50 text-xs">
                 <span className="text-gray-400">
                   {t("dashboardPage.guards")}:{" "}
@@ -438,7 +398,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {!loading && selectedMap && (
+      {!isLoading && selectedMap && (
         <>
           <MapView
             ref={mapWrapperRef}

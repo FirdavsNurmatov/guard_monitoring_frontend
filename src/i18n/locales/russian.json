@@ -263,6 +263,10 @@
     "newUser": "Добавить нового пользователя",
     "password": "Пароль",
     "newPassword": "Новый пароль",
+    "passwordChange": {
+      "guardPlaceholder": "Введите 6 цифр",
+      "placeholder": "Введите пароль"
+    },
     "enterLogin": "Введите логин",
     "enterPassword": "Введите пароль",
     "selectRole": "Выберите роль",
