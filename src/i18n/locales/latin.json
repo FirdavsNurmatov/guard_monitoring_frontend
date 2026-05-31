@@ -121,7 +121,8 @@
     "requiredField": "Bu maydon to'ldirilishi shart",
     "duplicateLogin": "Boshqa login kiriting",
     "guardPasswordLength": "Qo'riqchi roli uchun 6 ta raqamdan iborat parol kiriting",
-    "guardPasswordDigits": "Parol faqat 6 ta raqamdan iborat bo'lishi kerak"
+    "guardPasswordDigits": "Parol faqat 6 ta raqamdan iborat bo'lishi kerak",
+    "tooManyAttempts": "Juda ko'p urinishlar, 10 soniyadan so'ng qayta urinib ko'ring"
   },
   "messages": {
     "saveSuccess": "Ma'lumotlar muvaffaqiyatli saqlandi",

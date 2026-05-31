@@ -73,6 +73,8 @@ export default function Login() {
             setApiError(t("errors.userNotFound"));
           } else if (message.includes("inactive")) {
             setApiError(t("errors.inactiveOrganization"));
+          } else if (message.includes("Too")) {
+            setApiError(t("errors.tooManyAttempts"));
           } else {
             setApiError(message || t("errors.serverError"));
           }
