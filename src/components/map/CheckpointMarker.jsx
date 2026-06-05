@@ -308,7 +308,7 @@ export const CheckpointMarker = React.memo(
     ) : (
       <div style={{ position: "absolute", ...style }}>
         <div style={{ position: "relative", width: 12, height: 12 }}>
-          <div style={{ position: "absolute", right: 1, top: -20 }}>
+          <div style={{ position: "absolute", right: 1, top: -22 }}>
             {Inner}
           </div>
         </div>
