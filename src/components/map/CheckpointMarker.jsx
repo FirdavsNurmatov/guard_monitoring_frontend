@@ -2,8 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Timer, MapPin, Clock, User } from "lucide-react";
 import { Tooltip } from "react-leaflet";
-// import L from "leaflet";
-// const checkpointCircleIcon = L.circle([41.5, 69.5], { radius: 50 });
 
 const getStatusConfig = (t) => ({
   ON_TIME: {
@@ -264,51 +262,57 @@ export const CheckpointMarker = React.memo(
     if (ly.popup.r !== undefined) popupStyle.right = ly.popup.r;
 
     const Inner = (
-      <div style={{ position: "relative", width: 12, height: 12 }}>
-        <div style={{ position: "absolute", right: 1,top: -20 }}>
-          {latestLog && (
-            <div
-              style={{
-                position: "absolute",
-                inset: -4,
-                borderRadius: "50%",
-                border: `3px solid ${cfg.dot}`,
-                opacity: 1,
-                animation: "cp-ping 2.2s cubic-bezier(0.4,0,0.6,1) infinite",
-              }}
-            />
-          )}
+      <>
+        {latestLog && (
           <div
             style={{
-              width: 12,
-              height: 12,
+              position: "absolute",
+              inset: -4,
               borderRadius: "50%",
-              background: cfg.dot,
-              boxShadow: cfg.glow,
-              border: "1.5px solid #374151",
-              position: "relative",
-              zIndex: 1,
+              border: `3px solid ${cfg.dot}`,
+              opacity: 1,
+              animation: "cp-ping 2.2s cubic-bezier(0.4,0,0.6,1) infinite",
             }}
           />
-          <div style={lineStyle} />
-          <div style={popupStyle}>
-            <PopupCard
-              cp={cp}
-              latestLog={latestLog}
-              cfg={cfg}
-              countdown={countdown}
-            />
-          </div>
+        )}
+        <div
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            background: cfg.dot,
+            boxShadow: cfg.glow,
+            border: "1.5px solid #374151",
+            position: "relative",
+            zIndex: 1,
+          }}
+        />
+        <div style={lineStyle} />
+        <div style={popupStyle}>
+          <PopupCard
+            cp={cp}
+            latestLog={latestLog}
+            cfg={cfg}
+            countdown={countdown}
+          />
         </div>
-      </div>
+      </>
     );
 
     return objectType === "MAP" ? (
       <Tooltip direction="center" permanent>
-        {Inner}
+        <div style={{ position: "relative", width: 12, height: 12 }}>
+          {Inner}
+        </div>
       </Tooltip>
     ) : (
-      <div style={{ position: "absolute", ...style }}>{Inner}</div>
+      <div style={{ position: "absolute", ...style }}>
+        <div style={{ position: "relative", width: 12, height: 12 }}>
+          <div style={{ position: "absolute", right: 1, top: -20 }}>
+            {Inner}
+          </div>
+        </div>
+      </div>
     );
   },
 );
