@@ -27,11 +27,14 @@ const MapView = forwardRef(
       toggleFullscreen,
       t,
     },
-    ref
+    ref,
   ) => {
-    const handleMapTypeChange = useCallback((val) => {
-      setMapType(val);
-    }, [setMapType]);
+    const handleMapTypeChange = useCallback(
+      (val) => {
+        setMapType(val);
+      },
+      [setMapType],
+    );
 
     return (
       <div
@@ -61,6 +64,9 @@ const MapView = forwardRef(
                   style={{
                     top: `${cp.position?.yPercent || 0}%`,
                     left: `${cp.position?.xPercent || 0}%`,
+                    transform: "translate(-50%, -100%)",
+                    flexDirection: "column",
+                    pointerEvents: "none",
                   }}
                 />
               );
@@ -84,18 +90,12 @@ const MapView = forwardRef(
                   className="select-green"
                   style={{ width: 160 }}
                 >
-                  <Option value="m">
-                    🛣️ {t("dashboardPage.mapNormal")}
-                  </Option>
+                  <Option value="m">🛣️ {t("dashboardPage.mapNormal")}</Option>
                   <Option value="s">
                     🛰️ {t("dashboardPage.mapSatellite")}
                   </Option>
-                  <Option value="y">
-                    🌍 {t("dashboardPage.mapHybrid")}
-                  </Option>
-                  <Option value="p">
-                    ⛰️ {t("dashboardPage.mapTerrain")}
-                  </Option>
+                  <Option value="y">🌍 {t("dashboardPage.mapHybrid")}</Option>
+                  <Option value="p">⛰️ {t("dashboardPage.mapTerrain")}</Option>
                 </Select>
               </div>
               <div
@@ -148,11 +148,7 @@ const MapView = forwardRef(
 
                 {gpsPoints.length > 0 && (
                   <>
-                    <Polyline
-                      positions={gpsPoints}
-                      color="blue"
-                      weight={4}
-                    />
+                    <Polyline positions={gpsPoints} color="blue" weight={4} />
                     {/* 🔹 So‘nggi nuqtada kichik yashil doira */}
                     <Marker
                       position={gpsPoints[gpsPoints.length - 1]}
@@ -175,7 +171,7 @@ const MapView = forwardRef(
         )}
       </div>
     );
-  }
+  },
 );
 
 MapView.displayName = "MapView";

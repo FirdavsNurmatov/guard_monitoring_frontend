@@ -265,38 +265,40 @@ export const CheckpointMarker = React.memo(
 
     const Inner = (
       <div style={{ position: "relative", width: 12, height: 12 }}>
-        {latestLog && (
+        <div style={{ position: "absolute", right: 1,top: -20 }}>
+          {latestLog && (
+            <div
+              style={{
+                position: "absolute",
+                inset: -4,
+                borderRadius: "50%",
+                border: `3px solid ${cfg.dot}`,
+                opacity: 1,
+                animation: "cp-ping 2.2s cubic-bezier(0.4,0,0.6,1) infinite",
+              }}
+            />
+          )}
           <div
             style={{
-              position: "absolute",
-              inset: -4,
+              width: 12,
+              height: 12,
               borderRadius: "50%",
-              border: `3px solid ${cfg.dot}`,
-              opacity: 1,
-              animation: "cp-ping 2.2s cubic-bezier(0.4,0,0.6,1) infinite",
+              background: cfg.dot,
+              boxShadow: cfg.glow,
+              border: "1.5px solid #374151",
+              position: "relative",
+              zIndex: 1,
             }}
           />
-        )}
-        <div
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: "50%",
-            background: cfg.dot,
-            boxShadow: cfg.glow,
-            border: "1.5px solid #374151",
-            position: "relative",
-            zIndex: 1,
-          }}
-        />
-        <div style={lineStyle} />
-        <div style={popupStyle}>
-          <PopupCard
-            cp={cp}
-            latestLog={latestLog}
-            cfg={cfg}
-            countdown={countdown}
-          />
+          <div style={lineStyle} />
+          <div style={popupStyle}>
+            <PopupCard
+              cp={cp}
+              latestLog={latestLog}
+              cfg={cfg}
+              countdown={countdown}
+            />
+          </div>
         </div>
       </div>
     );

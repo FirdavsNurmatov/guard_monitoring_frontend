@@ -213,7 +213,9 @@ const ViewModal = ({ open, onClose, objectData }) => {
                       left: `${point?.position?.xPercent ?? 10}%`,
                       display: "flex",
                       alignItems: "center",
-                      gap: 4,
+                      transform: "translate(-50%, -100%)",
+                      flexDirection: "column",
+                      pointerEvents: "none",
                     }}
                   >
                     <div

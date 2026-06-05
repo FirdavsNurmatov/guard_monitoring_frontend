@@ -389,10 +389,10 @@ const EditModal = ({ open, onClose, objectData, fetchObjects }) => {
                         position: "absolute",
                         top: `${point?.position?.yPercent}%`,
                         left: `${point?.position?.xPercent}%`,
-                        transform: "translate(-50%, -100%)",
                         display: "flex",
-                        flexDirection: "column",
                         alignItems: "center",
+                        transform: "translate(-50%, -100%)",
+                        flexDirection: "column",
                         pointerEvents: "none",
                       }}
                     >
