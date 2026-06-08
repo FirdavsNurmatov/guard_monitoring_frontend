@@ -5,6 +5,7 @@ import {
   PictureOutlined,
   UsergroupAddOutlined,
   LogoutOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -58,7 +59,7 @@ export default function SuperAdminLayout() {
           items={[
             {
               key: "1",
-              icon: <PictureOutlined />,
+              icon: <ShopOutlined />,
               label: (
                 <Link to="/superadmin/organizations">
                   {t("navigation.organizations")}
