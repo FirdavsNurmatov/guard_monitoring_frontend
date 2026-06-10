@@ -2,7 +2,7 @@ import { useObjectStore } from "../../../store/useObjectStore";
 import { formatDate } from "../../../utils/dateFormat";
 import LocationMapModal from "./component/LocationMapModal";
 import { useGetJournalLogs } from "../../../services/query/AdminPanel/Journal/useGetJournalLogs";
-import { instance } from "../../../config/axios-instance";
+import { useExportJournal } from "./useExportJournal";
 import { useEffect, useState, useMemo } from "react";
 import { DatePicker, Table, ConfigProvider, Button, Select } from "antd";
 import {
@@ -12,8 +12,6 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import * as XLSX from "xlsx";
-import toast from "react-hot-toast";
 import "./Journal.css";
 
 const Journal = () => {
@@ -46,9 +44,16 @@ const Journal = () => {
 
   const [page, setPage] = useState(1);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [exportPeriod, setExportPeriod] = useState("day");
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+
+  const { handleExportToExcel, exportLoading } = useExportJournal({
+    selectedMapId,
+    pickerMode,
+    selectedDate,
+    dateRange,
+    t,
+  });
 
   // Save search state to localStorage when any of it changes
   useEffect(() => {
@@ -90,69 +95,6 @@ const Journal = () => {
     setDateRange(null);
     setHasSearched(false);
     setPage(1);
-  };
-
-  const handleExportToExcel = async () => {
-    if (!selectedMapId) return;
-
-    try {
-      let startDate, endDate;
-      const now = dayjs();
-
-      if (pickerMode === "range") {
-        if (!dateRange?.[0] || !dateRange?.[1]) {
-          toast.error(t("messages.selectDateFirst"));
-          return;
-        }
-        startDate = dateRange[0].startOf("day").format("YYYY-MM-DD");
-        endDate = dateRange[1].endOf("day").format("YYYY-MM-DD");
-      } else {
-        const base = selectedDate || now;
-        const unit = pickerMode === "date" ? "day" : pickerMode; // "date" → "day"
-        startDate = base.startOf(unit).format("YYYY-MM-DD");
-        endDate = base.endOf(unit).format("YYYY-MM-DD");
-      }
-
-      const url = `/admin/monitoringLogsFiltered?objectId=${selectedMapId}&startDate=${startDate}&endDate=${endDate}&page=1&limit=10000`;
-      const res = await instance.get(url);
-      const data = res?.data?.items;
-
-      if (data.length === 0) {
-        toast.error(t("messages.noDataToExport"));
-        return;
-      }
-
-      const exportData = data.map((log) => ({
-        [t("dashboardPage.username")]:
-          log.user?.username || log.user?.login || "-",
-        [t("dashboardPage.checkpointName")]: log.checkpoint?.name || "-",
-        [t("dashboardPage.arrivalDate")]: formatDate(
-          new Date(log.createdAt),
-          true,
-        ),
-        [t("dashboardPage.status")]:
-          log.status === "ON_TIME"
-            ? t("dashboardPage.onTimeStatus")
-            : log.status === "LATE"
-              ? t("dashboardPage.lateStatus")
-              : t("dashboardPage.veryLateStatus"),
-        [t("dashboardPage.latitude")]: log.location?.latitude || "-",
-        [t("dashboardPage.longitude")]: log.location?.longitude || "-",
-        [t("dashboardPage.distance")]:
-          log?.distance !== null && log?.distance !== undefined
-            ? `${log.distance} m`
-            : "-",
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Journal");
-      const fileName = `journal_${startDate}_${endDate}.xlsx`;
-      XLSX.writeFile(workbook, fileName);
-    } catch (error) {
-      console.error("Error exporting to Excel:", error);
-      toast.error(t("messages.exportError"));
-    }
   };
 
   const getPickerPlaceholder = () => {
@@ -334,6 +276,8 @@ const Journal = () => {
                 type="primary"
                 icon={<DownloadOutlined />}
                 onClick={handleExportToExcel}
+                loading={exportLoading}
+                disabled={exportLoading}
                 style={{
                   backgroundColor: "#10b981",
                   borderColor: "#10b981",
