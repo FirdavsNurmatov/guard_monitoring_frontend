@@ -111,7 +111,7 @@ const Organizations = () => {
   // 🔹 INACTIVE
   const handleInactive = async (id) => {
     try {
-      await instance.patch(`/superadmin/organization/${id}/status`, {
+      await instance.patch(`/superadmin/organization/${id}`, {
         status: "INACTIVE",
       });
       message.success(t("superAdmin.organizations.deactivatedSuccess"));
