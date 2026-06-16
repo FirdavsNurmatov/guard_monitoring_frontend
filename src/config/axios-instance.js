@@ -2,25 +2,20 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useAuthStore } from "../store/useAuthStore";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
-import { getDeviceId } from "../utils/device-id";
 
 export const instance = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
 });
 
 instance.interceptors.request.use(async (config) => {
-  const accessToken =
-    Cookies.get("accessToken") ||
-    JSON.parse(localStorage.getItem("auth") || "{}")?.state?.token;
+  if (config.url !== "/auth/refresh") {
+    const data = JSON.parse(localStorage.getItem("auth") || "{}");
+    const token = data?.state?.token;
 
-  // auth token
-  if (accessToken && config.url !== "/auth/refresh") {
-    config.headers["Authorization"] = `Bearer ${accessToken}`;
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
   }
-
-  // device id (HAR DOIM yuboramiz)
-  config.headers["X-Device-Id"] = getDeviceId();
-
   return config;
 });
 
