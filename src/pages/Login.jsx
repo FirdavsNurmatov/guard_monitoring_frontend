@@ -7,8 +7,11 @@ import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import { useObjectStore } from "../store/useObjectStore";
 import { useLogin } from "../services/mutation/useLogin";
+import { getDeviceId } from "../utils/device-id";
 
 export default function Login() {
+  getDeviceId();
+
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

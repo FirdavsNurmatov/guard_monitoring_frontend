@@ -2,20 +2,25 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useAuthStore } from "../store/useAuthStore";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
+import { getDeviceId } from "../utils/device-id";
 
 export const instance = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
 });
 
 instance.interceptors.request.use(async (config) => {
-  if (config.url !== "/auth/refresh") {
-    const data = JSON.parse(localStorage.getItem("auth") || "{}");
-    const token = data?.state?.token;
+  const accessToken =
+    Cookies.get("accessToken") ||
+    JSON.parse(localStorage.getItem("auth") || "{}")?.state?.token;
 
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
+  // auth token
+  if (accessToken && config.url !== "/auth/refresh") {
+    config.headers["Authorization"] = `Bearer ${accessToken}`;
   }
+
+  // device id (HAR DOIM yuboramiz)
+  config.headers["X-Device-Id"] = getDeviceId();
+
   return config;
 });
 
@@ -30,9 +35,8 @@ const refreshAuthLogic = async (failedRequest) => {
     Cookies.set("accessToken", newAccessToken);
     setToken(newAccessToken);
 
-    failedRequest.response.config.headers[
-      "Authorization"
-    ] = `Bearer ${newAccessToken}`;
+    failedRequest.response.config.headers["Authorization"] =
+      `Bearer ${newAccessToken}`;
 
     return Promise.resolve();
   } catch (err) {
